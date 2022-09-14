@@ -388,6 +388,8 @@ namespace heif {
 
     Error add_XMP_metadata(const std::shared_ptr<Image>& master_image, const void* data, int size);
 
+    Error add_uri_metadata(const std::shared_ptr<Image>& master_image, const void* data, int size, const char* itrm_uri_type);
+
     Error add_generic_metadata(const std::shared_ptr<Image>& master_image, const void* data, int size,
                                const char* item_type, const char* content_type);
 

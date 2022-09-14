@@ -2457,6 +2457,19 @@ struct heif_error heif_context_add_XMP_metadata(struct heif_context* ctx,
   }
 }
 
+struct heif_error heif_context_add_uri_metadata(struct heif_context* ctx,
+                                                const struct heif_image_handle* image_handle,
+                                                const void* data, int size,
+                                                const char* item_uri_type) 
+{
+  Error error = ctx->context->add_uri_metadata(image_handle->image, data, size, item_uri_type);
+  if (error != Error::Ok) {
+    return error.error_struct(ctx->context.get());
+  }
+  else {
+    return error_Ok;
+  }
+}
 
 struct heif_error heif_context_add_generic_metadata(struct heif_context* ctx,
                                                     const struct heif_image_handle* image_handle,

@@ -466,6 +466,9 @@ namespace heif {
     void set_item_type(const std::string& type)
     { m_item_type = type; }
 
+    void set_item_uri_type(const std::string& uri_type)
+    { m_item_uri_type = uri_type; }
+
     void set_item_name(const std::string& name)
     { m_item_name = name; }
 
