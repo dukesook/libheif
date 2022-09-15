@@ -867,14 +867,16 @@ Error HeifContext::interpret_heif_file()
 
   for (heif_item_id id : image_IDs) {
     std::string item_type = m_heif_file->get_item_type(id);
+    std::string item_uri_type = m_heif_file->get_item_uri_type(id);
     std::string content_type = m_heif_file->get_content_type(id);
-
+  
     // we now assign all kinds of metadata to the image, not only 'Exif' and 'XMP'
 
     std::shared_ptr<ImageMetadata> metadata = std::make_shared<ImageMetadata>();
     metadata->item_id = id;
     metadata->item_type = item_type;
     metadata->content_type = content_type;
+    metadata->item_uri_type = item_uri_type;
 
     Error err = m_heif_file->get_compressed_image_data(id, &(metadata->m_data));
     if (err) {

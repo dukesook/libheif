@@ -1279,6 +1279,8 @@ const char* heif_image_handle_get_metadata_uri_type(const struct heif_image_hand
 {
   for (auto& metadata : handle->image->get_metadata()) {
     if (metadata->item_id == metadata_id) {
+      std::cout << metadata->item_uri_type.c_str() << std::endl;
+      printf("item_uri_type: %s\n", metadata->item_uri_type.c_str());//DELETE THIS LINE
       return metadata->item_uri_type.c_str();
     }
   }

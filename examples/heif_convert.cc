@@ -339,7 +339,13 @@ int main(int argc, char** argv)
 
       err = heif_image_handle_get_metadata(handle, metadata_ids[i], klvbuf);
 
-      // TODO:  Send klvbuf to MIMD deserializer
+      const char* uri = heif_image_handle_get_metadata_uri_type(handle, metadata_ids[i]);
+      if (uri == nullptr) {
+        printf("ERROR! - uri not found\n");
+      }
+      printf("uri: %s\n", uri);
+
+
       for(size_t j = 0; j < metadata_size; j++) {
         printf("%c", klvbuf[j]);
       }
