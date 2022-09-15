@@ -693,7 +693,7 @@ struct heif_error heif_image_handle_get_auxiliary_image_handle(const struct heif
                                                                struct heif_image_handle** out_auxiliary_handle);
 
 
-// ------------------------- metadata (Exif / XMP) -------------------------
+// ------------------------- metadata (Exif / XMP / URI) -------------------------
 
 // How many metadata blocks are attached to an image. Usually, the only metadata is
 // an "Exif" block.
@@ -720,9 +720,9 @@ LIBHEIF_API
 const char* heif_image_handle_get_metadata_content_type(const struct heif_image_handle* handle,
                                                         heif_item_id metadata_id);
 
-// The uri_type is a 16-byte key that indicates how to parse out_data
+// infe items of type "uri " contain customized metadata
+// The uri_type is a 16-byte key that indicates how to parse the raw out_data
 // A list of some registered uri keys can be found here: https://registry.smpte-ra.org/view/published/groups_view.html
-// Returns nullptr if the metadata is of type "uri "
 LIBHEIF_API
 const char* heif_image_handle_get_metadata_uri_type(const struct heif_image_handle* handle,
                                            heif_item_id metadata_id);
@@ -1450,7 +1450,6 @@ struct heif_error heif_context_add_XMP_metadata(struct heif_context*,
                                                 const void* data, int size);
 
 // Add URI metadata to an image.
-// item_uri_type is a 16 byte key
 LIBHEIF_API
 struct heif_error heif_context_add_uri_metadata(struct heif_context*,
                                                 const struct heif_image_handle* image_handle,
