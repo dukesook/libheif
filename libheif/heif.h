@@ -720,6 +720,13 @@ LIBHEIF_API
 const char* heif_image_handle_get_metadata_content_type(const struct heif_image_handle* handle,
                                                         heif_item_id metadata_id);
 
+// The uri_type is a 16-byte key that indicates how to parse out_data
+// A list of some registered uri keys can be found here: https://registry.smpte-ra.org/view/published/groups_view.html
+// Returns nullptr if the metadata is of type "uri "
+LIBHEIF_API
+const char* heif_image_handle_get_metadata_uri_type(const struct heif_image_handle* handle,
+                                           heif_item_id metadata_id);
+
 // Get the size of the raw metadata, as stored in the HEIF file.
 LIBHEIF_API
 size_t heif_image_handle_get_metadata_size(const struct heif_image_handle* handle,
