@@ -321,6 +321,36 @@ int main(int argc, char** argv)
       std::cerr << "Warning: " << err.message << "\n";
     }
 
+    //******************************** DS ********************************//
+    int num_metadata_blocks = heif_image_handle_get_number_of_metadata_blocks(handle, "uri ");
+
+    if (!option_quiet) {
+      std::cout << "Number of metadata blocks for image: " << num_metadata_blocks << "\n";
+    }
+
+    heif_item_id metadata_ids[num_metadata_blocks];
+
+    heif_image_handle_get_list_of_metadata_block_IDs(handle, "uri ", metadata_ids, num_metadata_blocks);
+    
+    for (int i=0; i<num_metadata_blocks; i++) {
+      printf("metadata id: %d\n", metadata_ids[i]);
+      size_t metadata_size = heif_image_handle_get_metadata_size(handle, metadata_ids[i]);
+      uint8_t klvbuf[metadata_size];
+
+      err = heif_image_handle_get_metadata(handle, metadata_ids[i], klvbuf);
+
+      // TODO:  Send klvbuf to MIMD deserializer
+      for(size_t j = 0; j < metadata_size; j++) {
+        printf("%c", klvbuf[j]);
+      }
+      printf("\n");
+
+      if (!option_quiet) {
+        std::cout << "Metadata read of blocksize : " << metadata_size << "\n";
+      }
+    }
+    //******************************** DS ********************************//
+
     if (image) {
       bool written = encoder->Encode(handle, image, filename);
       if (!written) {

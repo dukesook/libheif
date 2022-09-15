@@ -1443,6 +1443,7 @@ struct heif_error heif_context_add_XMP_metadata(struct heif_context*,
                                                 const void* data, int size);
 
 // Add URI metadata to an image.
+// item_uri_type is a 16 byte key
 LIBHEIF_API
 struct heif_error heif_context_add_uri_metadata(struct heif_context*,
                                                 const struct heif_image_handle* image_handle,
