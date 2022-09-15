@@ -1324,16 +1324,6 @@ int main(int argc, char** argv)
       }
     }
 
-    //** DS **/
-    char data[] = "deadbeef";
-    // char key[] = {0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x01, 0x0F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-    char key[] = "060E2B34.01010101.0F000000.00000000";
-    heif_error error = heif_context_add_uri_metadata(context.get(), handle, data, sizeof(data), key);
-    if (error.code) {
-      printf("ERROR - %s\n", error.message);
-    }
-    //** DS **/
-
     heif_image_handle_release(handle);
     heif_encoding_options_free(options);
   }
