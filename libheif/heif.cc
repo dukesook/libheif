@@ -591,6 +591,64 @@ struct heif_error heif_context_get_image_handle(struct heif_context* ctx,
   return Error::Ok.error_struct(ctx->context.get());
 }
 
+// ============================== NGIIS ============================== //
+
+heif_item_id* heif_context_get_infe_ids(heif_context* ctx, uint32_t* total_id_count) {
+  return nullptr;
+}
+
+struct heif_box_infe* heif_context_get_infe(struct heif_context* ctx, uint32_t id) {
+  // //Get All Items 
+  // auto heif_file = ctx->context->get_heif_file();
+  // auto infe_boxes = heif_file->get_infe_boxes();
+
+  // //Get Desired Item
+  // std::shared_ptr<Box_infe> infe = infe_boxes.find(id)->second;
+  // //TODO - Verify that the infe box was found
+
+  // //Convert to C struct heif_box_infe
+  // heif_box_infe* infe_struct = infe->to_heif_box_infe();
+
+  // return infe_struct;
+  return nullptr;
+}
+
+heif_image* heif_context_get_image_by_id(heif_context* ctx, uint32_t id) {
+  return nullptr;
+}
+
+//URI ITEMS
+struct heif_error heif_context_add_uri_metadata(struct heif_context* ctx,
+                                                const struct heif_image_handle* image_handle,
+                                                const void* data, int size,
+                                                const char* item_uri_type)  {
+  // Error error = ctx->context->add_uri_metadata(image_handle->image, data, size, item_uri_type);
+  // if (error != Error::Ok) {
+  //   return error.error_struct(ctx->context.get());
+  // }
+  // else {
+  //   return error_Ok;
+  // }
+  return error_Ok;
+}
+
+const char* heif_image_handle_get_metadata_uri_type(const struct heif_image_handle* handle, heif_item_id metadata_id)  {
+// infe items of type "uri " contain customized metadata
+// The uri_type is a 16-byte key that indicates how to parse the raw out_data
+// A list of some registered uri keys can be found here: https://registry.smpte-ra.org/view/published/groups_view.html
+
+  // for (auto& metadata : handle->image->get_metadata()) {
+  //   if (metadata->item_id == metadata_id) {
+  //     std::cout << metadata->item_uri_type.c_str() << std::endl;
+  //     return metadata->item_uri_type.c_str();
+  //   }
+  // }
+
+  return nullptr;
+}
+
+// ============================== NGIIS ============================== //
+
 
 int heif_image_handle_is_primary_image(const struct heif_image_handle* handle)
 {
