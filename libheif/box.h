@@ -485,6 +485,11 @@ namespace heif {
 
     Error write(StreamWriter& writer) const override;
 
+    // ============================== NGIIS ============================== //
+    //Allows programs outside of libheif to have items                     //
+    heif_box_infe* to_heif_box_infe();                                     //
+    // ============================== NGIIS ============================== //
+
   protected:
     Error parse(BitstreamRange& range) override;
 

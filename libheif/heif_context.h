@@ -394,6 +394,11 @@ namespace heif {
 
     void write(StreamWriter& writer);
 
+// ============================== NGIIS ============================== //
+    std::shared_ptr<HeifFile> get_heif_file();
+// ============================== NGIIS ============================== //
+  
+
   private:
     const struct heif_decoder_plugin* get_decoder(enum heif_compression_format type) const;
 

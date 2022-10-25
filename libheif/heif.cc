@@ -593,28 +593,47 @@ struct heif_error heif_context_get_image_handle(struct heif_context* ctx,
 
 // ============================== NGIIS ============================== //
 
-heif_item_id* heif_context_get_infe_ids(heif_context* ctx, uint32_t* total_id_count) {
-  return nullptr;
+heif_item_id* heif_context_get_infe_ids(heif_context* ctx, uint32_t* id_count) {
+  auto heif_file = ctx->context->get_heif_file();
+  std::vector<heif_item_id> ids_vector = heif_file->get_item_IDs();
+
+  //Convert Vector To Array - for C backwards compatibility
+  *id_count = (uint32_t) ids_vector.size();
+  heif_item_id* ids_array = new heif_item_id[*id_count];
+  std::copy(ids_vector.begin(), ids_vector.end(), ids_array);
+
+  return ids_array;
 }
 
 struct heif_box_infe* heif_context_get_infe(struct heif_context* ctx, uint32_t id) {
-  // //Get All Items 
-  // auto heif_file = ctx->context->get_heif_file();
-  // auto infe_boxes = heif_file->get_infe_boxes();
 
-  // //Get Desired Item
-  // std::shared_ptr<Box_infe> infe = infe_boxes.find(id)->second;
-  // //TODO - Verify that the infe box was found
+  auto heif_file = ctx->context->get_heif_file();
 
-  // //Convert to C struct heif_box_infe
-  // heif_box_infe* infe_struct = infe->to_heif_box_infe();
+  std::shared_ptr<Box_infe> infe_box = heif_file->get_infe_box(id);
 
-  // return infe_struct;
-  return nullptr;
+  //Convert to C struct heif_box_infe
+  heif_box_infe* infe_struct = infe_box->to_heif_box_infe();
+
+  return infe_struct;
+  // return nullptr;
 }
 
 heif_image* heif_context_get_image_by_id(heif_context* ctx, uint32_t id) {
-  return nullptr;
+  //Variables
+  inline std::shared_ptr<heif::HeifPixelImage> heif_pixel_image = std::make_shared<HeifPixelImage>();
+  heif_image* img = new heif_image; //The HeifPixelImage class is only visible inside the library
+  
+  //Get Desired Image
+  heif::Error error = ctx->context->decode_image_user(id, heif_pixel_image, heif_colorspace_RGB, heif_chroma_interleaved_RGB, nullptr);
+  // ctx->context->decode_image_planar(id, img, heif_colorspace_RGB, nullptr, false);
+  if (error) {
+    return nullptr;
+  }
+
+  //Convert HeifPixelImage to heif_image*
+  img->image = heif_pixel_image;
+  
+  return img;
 }
 
 //URI ITEMS

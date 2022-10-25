@@ -115,6 +115,11 @@ static uint32_t readvec(const std::vector<uint8_t>& data, int& ptr, int len)
   return val;
 }
 
+// ============================== NGIIS ============================== //
+std::shared_ptr<HeifFile> HeifContext::get_heif_file() {
+  return m_heif_file;
+}
+// ============================== NGIIS ============================== //
 
 class ImageGrid
 {

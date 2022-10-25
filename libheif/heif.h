@@ -580,24 +580,23 @@ void heif_context_set_max_decoding_threads(struct heif_context* ctx, int max_thr
 
 struct heif_box_infe  {
   uint32_t item_ID = 0;               // Unique Identifier, starting with 1 (0 is an invalid id)
-  uint16_t item_protection_index = 0; //
+  uint16_t item_protection_index = 0; // ????
   const char* item_type;              // usually hvc1 or grid
   const char* item_name;              // Optional, usually blank
-  const char* content_type;           //
+  const char* content_type;           // 
   const char* content_encoding;       //
   const char* item_uri_type;          // 16 Byte Key identifying the significane of the data: e.g urn:misb:KLV:ul:060E2B34020501010E01050300000000
   bool hidden_item = false;           // if set, this item should not be part of the presentation (i.e. hidden)
 };
 
 LIBHEIF_API
-heif_item_id* heif_context_get_infe_ids(heif_context* ctx, uint32_t* total_id_count);
+heif_item_id* heif_context_get_infe_ids(heif_context* ctx, uint32_t* id_count);
 
 LIBHEIF_API
 heif_box_infe* heif_context_get_infe(struct heif_context* ctx, uint32_t id);
 
 LIBHEIF_API
 heif_image* heif_context_get_image_by_id(heif_context* ctx, uint32_t id);
-
 
 //URI ITEMS
 LIBHEIF_API
