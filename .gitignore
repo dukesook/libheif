@@ -38,3 +38,6 @@ libheif/*-fuzzer
 libheif/heif_version.h
 stamp-h1
 tests/test-race
+
+build/
+libheif/.vscode/
