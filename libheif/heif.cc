@@ -618,13 +618,14 @@ struct heif_box_infe* heif_context_get_infe(struct heif_context* ctx, uint32_t i
   // return nullptr;
 }
 
-heif_image* heif_context_get_image_by_id(heif_context* ctx, uint32_t id) {
+heif_image* heif_context_get_image_by_id(heif_context* ctx, uint32_t id, enum heif_colorspace colorspace, enum heif_chroma chroma, heif_decoding_options* options) {
   //Variables
-  inline std::shared_ptr<heif::HeifPixelImage> heif_pixel_image = std::make_shared<HeifPixelImage>();
+  std::shared_ptr<heif::HeifPixelImage> heif_pixel_image = std::make_shared<HeifPixelImage>();
   heif_image* img = new heif_image; //The HeifPixelImage class is only visible inside the library
   
   //Get Desired Image
-  heif::Error error = ctx->context->decode_image_user(id, heif_pixel_image, heif_colorspace_RGB, heif_chroma_interleaved_RGB, nullptr);
+  printf("TODO - heif.cc - What's the difference between decode_image_user() & decode_image_planar()?\n");
+  heif::Error error = ctx->context->decode_image_user(id, heif_pixel_image, colorspace, chroma, options);
   // ctx->context->decode_image_planar(id, img, heif_colorspace_RGB, nullptr, false);
   if (error) {
     return nullptr;
@@ -641,13 +642,13 @@ struct heif_error heif_context_add_uri_metadata(struct heif_context* ctx,
                                                 const struct heif_image_handle* image_handle,
                                                 const void* data, int size,
                                                 const char* item_uri_type)  {
-  // Error error = ctx->context->add_uri_metadata(image_handle->image, data, size, item_uri_type);
-  // if (error != Error::Ok) {
-  //   return error.error_struct(ctx->context.get());
-  // }
-  // else {
-  //   return error_Ok;
-  // }
+  Error error = ctx->context->add_uri_metadata(image_handle->image, data, size, item_uri_type);
+  if (error != Error::Ok) {
+    return error.error_struct(ctx->context.get());
+  }
+  else {
+    return error_Ok;
+  }
   return error_Ok;
 }
 
@@ -656,12 +657,20 @@ const char* heif_image_handle_get_metadata_uri_type(const struct heif_image_hand
 // The uri_type is a 16-byte key that indicates how to parse the raw out_data
 // A list of some registered uri keys can be found here: https://registry.smpte-ra.org/view/published/groups_view.html
 
-  // for (auto& metadata : handle->image->get_metadata()) {
-  //   if (metadata->item_id == metadata_id) {
-  //     std::cout << metadata->item_uri_type.c_str() << std::endl;
-  //     return metadata->item_uri_type.c_str();
-  //   }
-  // }
+  for (auto& metadata : handle->image->get_metadata()) {
+    if (metadata->item_id == metadata_id) {
+      std::string key = metadata->item_uri_type;
+      size_t size = key.size();
+
+      // Make a deep copy so that the value is preserved even when 
+      // parent objects go out of scope
+      char* c_key = (char*) malloc(sizeof(char) * size);
+      for (size_t i = 0; i < size; i++) {
+        c_key[i] = key[i];
+      }     
+      return c_key;
+    }
+  }
 
   return nullptr;
 }

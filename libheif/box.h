@@ -486,8 +486,13 @@ namespace heif {
     Error write(StreamWriter& writer) const override;
 
     // ============================== NGIIS ============================== //
-    //Allows programs outside of libheif to have items                     //
     heif_box_infe* to_heif_box_infe();                                     //
+    const std::string& get_item_uri_type() const { 
+      return m_item_uri_type; 
+    }
+    void set_item_uri_type(const std::string& uri_type) { 
+      m_item_uri_type = uri_type;
+    }
     // ============================== NGIIS ============================== //
 
   protected:
