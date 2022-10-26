@@ -57,6 +57,9 @@ namespace heif {
     std::string item_type;  // e.g. "Exif"
     std::string content_type;
     std::vector<uint8_t> m_data;
+// ============================== NGIIS ============================== //
+    std::string item_uri_type; //16-byte key indicating how to parse the data when item_type is "uri "
+// ============================== NGIIS ============================== //
   };
 
 
@@ -393,6 +396,12 @@ namespace heif {
                                heif_metadata_compression compression);
 
     void write(StreamWriter& writer);
+
+// ============================== NGIIS ============================== //
+    std::shared_ptr<HeifFile> get_heif_file();
+    Error add_uri_metadata(const std::shared_ptr<Image>& master_image, const void* data, int size, const char* item_uri_type);
+// ============================== NGIIS ============================== //
+  
 
   private:
     const struct heif_decoder_plugin* get_decoder(enum heif_compression_format type) const;

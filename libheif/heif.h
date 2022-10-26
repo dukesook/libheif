@@ -1021,6 +1021,80 @@ struct heif_decoding_options
 };
 
 
+
+
+
+// ============================== NGIIS ============================== //
+
+struct heif_box_infe  {
+  uint32_t item_ID = 0;               // Unique Identifier, starting with 1 (0 is an invalid id)
+  uint16_t item_protection_index = 0; // ????
+  const char* item_type;              // Can be: hvc1, grid, exif, mime, uri ,
+  const char* item_name;              // "The item_name shall be a valid URL (e.g. a simple name, or pathname) and shall not be an absolute URL"
+  const char* content_type;           // e.g: application/rdf+xml for mime
+  const char* content_encoding;       // Optional
+  const char* item_uri_type;          // 16 Byte Key identifying the significane of the data: e.g urn:misb:KLV:ul:060E2B34020501010E01050300000000
+  bool hidden_item = false;           // if set, this item should not be part of the presentation (i.e. hidden)
+};
+
+/* aligned(8) class ItemInfoEntry
+   extends FullBox('infe', version, 0) {
+    if ((version == 0) || (version == 1)) {
+      unsigned int(16) item_ID;
+      unsigned int(16) item_protection_index;
+      utf8string item_name;
+      utf8string content_type;
+      utf8string content_encoding; //optional
+    }
+    if (version == 1) {
+      unsigned int(32) extension_type; //optional
+      ItemInfoExtension(extension_type); //optional
+    }
+    if (version >= 2) {
+      if (version == 2) {
+        unsigned int(16) item_ID;
+      } else if (version == 3) {
+        unsigned int(32) item_ID;
+      }
+        unsigned int(16) item_protection_index;
+        unsigned int(32) item_type;
+        utf8string item_name;
+        if (item_type=='mime') {
+          utf8string content_type;
+          utf8string content_encoding; //optional
+        } else if (item_type == 'uri ') {
+          utf8string item_uri_type;
+        }
+    }
+} */
+
+
+LIBHEIF_API
+heif_item_id* heif_context_get_infe_ids(heif_context* ctx, uint32_t* id_count);
+
+LIBHEIF_API
+heif_box_infe* heif_context_get_infe(struct heif_context* ctx, uint32_t id);
+
+LIBHEIF_API
+heif_image* heif_context_get_image_by_id(heif_context* ctx, uint32_t id, enum heif_colorspace colorspace, enum heif_chroma chroma, heif_decoding_options*);
+
+//URI ITEMS
+LIBHEIF_API
+struct heif_error heif_context_add_uri_metadata(struct heif_context*,
+                                                const struct heif_image_handle* image_handle,
+                                                const void* data, int size,
+                                                const char* item_uri_type);
+LIBHEIF_API
+const char* heif_image_handle_get_metadata_uri_type(const struct heif_image_handle* handle, heif_item_id metadata_id);
+
+
+// ============================== NGIIS ============================== //
+
+
+ 
+
+
+
 // Allocate decoding options and fill with default values.
 // Note: you should always get the decoding options through this function since the
 // option structure may grow in size in future versions.
