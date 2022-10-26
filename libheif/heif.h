@@ -573,6 +573,7 @@ void heif_context_set_maximum_image_size_limit(struct heif_context* ctx, int max
 LIBHEIF_API
 void heif_context_set_max_decoding_threads(struct heif_context* ctx, int max_threads);
 
+
 // ========================= heif_image_handle =========================
 
 // An heif_image_handle is a handle to a logical image in the HEIF file.
