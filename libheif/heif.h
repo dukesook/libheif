@@ -1085,8 +1085,10 @@ struct iref_box_reference {
   uint32_t to_item_ID_count;  // The number of items in to_item_ID, aka how many items does the from_item_ID reference.
   heif_item_id* to_item_IDs;   // List of ids that are referenced by the 'from_item_ID'.
 };
+
 // Returns all references in the 'iref' box associated with the proivded id.
 // If there are so references, then iref_out is a nullptr 
+// Remember to call free() on iref_out when it's no longer needed. 
 LIBHEIF_API
 struct heif_error heif_context_get_all_references_for_id(heif_context*, uint32_t id, iref_box_reference** iref_out);
 
@@ -1099,6 +1101,15 @@ struct heif_error heif_context_add_uri_metadata(struct heif_context*,
 LIBHEIF_API
 const char* heif_image_handle_get_metadata_uri_type(const struct heif_image_handle* handle, heif_item_id metadata_id);
 
+//GRIDDIING
+LIBHEIF_API
+struct heif_error heif_context_encode_grid_image(struct heif_context* ctx,
+                                                 struct heif_image** input_images,   // array of tile images
+                                                 int columns,
+                                                 int rows,
+                                                 struct heif_encoder* encoder,
+                                                 const struct heif_encoding_options* input_options,
+                                                 struct heif_image_handle** out_image_handle);
 
 // ============================== NGIIS ============================== //
 

@@ -713,6 +713,18 @@ const char* heif_image_handle_get_metadata_uri_type(const struct heif_image_hand
   return nullptr;
 }
 
+struct heif_error heif_context_encode_grid_image(struct heif_context* ctx,
+                                                 struct heif_image** input_images,   // array of tile images
+                                                 int columns,
+                                                 int rows,
+                                                 struct heif_encoder* encoder,
+                                                 const struct heif_encoding_options* input_options,
+                                                 struct heif_image_handle** out_image_handle) {
+
+
+  return error_Ok;
+}
+
 // ============================== NGIIS ============================== //
 
 
