@@ -1029,7 +1029,7 @@ struct heif_decoding_options
 struct heif_box_infe  {
   uint32_t item_ID = 0;               // Unique Identifier, starting with 1 (0 is an invalid id)
   uint16_t item_protection_index = 0; // ????
-  const char* item_type;              // Can be: hvc1, grid, exif, mime, uri ,
+  const char* item_type;              // Can be: hvc1, grid, exif, mime, uri , etc
   const char* item_name;              // "The item_name shall be a valid URL (e.g. a simple name, or pathname) and shall not be an absolute URL"
   const char* content_type;           // e.g: application/rdf+xml for mime
   const char* content_encoding;       // Optional
@@ -1068,15 +1068,27 @@ struct heif_box_infe  {
     }
 } */
 
-
+//infe
 LIBHEIF_API
-heif_item_id* heif_context_get_infe_ids(heif_context* ctx, uint32_t* id_count);
-
+heif_item_id* heif_context_get_infe_ids(heif_context*, uint32_t* id_count);
 LIBHEIF_API
-heif_box_infe* heif_context_get_infe(struct heif_context* ctx, uint32_t id);
+heif_box_infe* heif_context_get_infe(struct heif_context*, uint32_t id);
 
+//heif_image
 LIBHEIF_API
-heif_image* heif_context_get_image_by_id(heif_context* ctx, uint32_t id, enum heif_colorspace colorspace, enum heif_chroma chroma, heif_decoding_options*);
+heif_image* heif_context_get_image_by_id(heif_context*, uint32_t id, heif_colorspace, heif_chroma, heif_decoding_options*);
+
+//iref box
+struct iref_box_reference {
+  const char* referenceType;  // 4 Character Code such as "cdsc" or "dimg"
+  heif_item_id from_item_ID;  // The ID of the infe box item.
+  uint32_t to_item_ID_count;  // The number of items in to_item_ID, aka how many items does the from_item_ID reference.
+  heif_item_id* to_item_IDs;   // List of ids that are referenced by the 'from_item_ID'.
+};
+// Returns all references in the 'iref' box associated with the proivded id.
+// If there are so references, then iref_out is a nullptr 
+LIBHEIF_API
+struct heif_error heif_context_get_all_references_for_id(heif_context*, uint32_t id, iref_box_reference** iref_out);
 
 //URI ITEMS
 LIBHEIF_API

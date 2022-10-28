@@ -41,3 +41,4 @@ tests/test-race
 
 build/
 libheif/.vscode/
+.vscode/

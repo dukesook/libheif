@@ -615,7 +615,6 @@ struct heif_box_infe* heif_context_get_infe(struct heif_context* ctx, uint32_t i
   heif_box_infe* infe_struct = infe_box->to_heif_box_infe();
 
   return infe_struct;
-  // return nullptr;
 }
 
 heif_image* heif_context_get_image_by_id(heif_context* ctx, uint32_t id, enum heif_colorspace colorspace, enum heif_chroma chroma, heif_decoding_options* options) {
@@ -636,6 +635,45 @@ heif_image* heif_context_get_image_by_id(heif_context* ctx, uint32_t id, enum he
   
   return img;
 }
+
+//iref box
+struct heif_error heif_context_get_all_references_for_id(heif_context* ctx, uint32_t id, iref_box_reference** iref_out) {
+
+  //Get References
+  auto references = ctx->context->get_heif_file()->get_iref_box()->get_references_from(id);
+  size_t ref_count = references.size();
+
+  //If Not References  
+  if (ref_count == 0) {
+    *iref_out = nullptr;
+    return error_Ok;
+  }
+
+  //Allocate Memory
+  *iref_out = (iref_box_reference*) malloc( sizeof(iref_box_reference) * ref_count );
+
+  //For each Reference
+  for (size_t i = 0; i < ref_count; i++) {
+    auto ref = references.at(i);
+    uint32_t to_ids_count = (uint32_t) ref.to_item_ID.size();
+
+    //Copy libheif class to ngiis struct
+    (*iref_out)[i].referenceType = ref.header.get_type_string().c_str();
+    (*iref_out)[i].from_item_ID = ref.from_item_ID;
+    (*iref_out)[i].to_item_ID_count = to_ids_count;
+
+    //Convert C++ Vector to C Array 
+    (*iref_out)[i].to_item_IDs= (heif_item_id*)malloc(sizeof(heif_item_id) * to_ids_count);
+    for (size_t j = 0; j < to_ids_count; j++) {
+      (*iref_out)[i].to_item_IDs[j] = ref.to_item_ID.at(j);
+    }
+
+  }
+
+
+  return error_Ok;
+}
+
 
 //URI ITEMS
 struct heif_error heif_context_add_uri_metadata(struct heif_context* ctx,
