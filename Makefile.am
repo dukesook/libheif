@@ -4,12 +4,12 @@ SUBDIRS = \
     libheif \
     examples \
     extra \
-    fuzzing \
     gdk-pixbuf \
     gnome \
     go \
     scripts \
-    tests
+    tests \
+    fuzzing
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libheif.pc

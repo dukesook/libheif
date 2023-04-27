@@ -79,9 +79,6 @@ elif [ "$MINGW" == "64" ]; then
     BIN_SUFFIX=.exe
     BIN_WRAPPER=wine64
     export WINEPATH="/usr/lib/gcc/x86_64-w64-mingw32/9.3-posix/;/usr/x86_64-w64-mingw32/lib"
-elif [ ! -z "$FUZZER" ]; then
-    export CC="$BUILD_ROOT/clang/bin/clang"
-    export CXX="$BUILD_ROOT/clang/bin/clang++"
 fi
 
 PKG_CONFIG_PATH=
@@ -136,7 +133,12 @@ if [ ! -z "$CMAKE" ]; then
     if [ "$CLANG_TIDY" = "1" ]; then
         CMAKE_OPTIONS="$CMAKE_OPTIONS -DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
     fi
-
+    if [ ! -z "$FUZZER" ]; then
+        CMAKE_OPTIONS="--preset=fuzzing"
+    fi
+    if [ ! -z "$TESTS" ]; then
+        CMAKE_OPTIONS="--preset=testing"
+    fi
     cmake . $CMAKE_OPTIONS
 fi
 
@@ -144,85 +146,87 @@ if [ ! -z "$FUZZER" ] && [ "$CURRENT_OS" = "linux" ]; then
     export ASAN_SYMBOLIZER="$BUILD_ROOT/clang/bin/llvm-symbolizer"
 fi
 
-if [ -z "$EMSCRIPTEN_VERSION" ] && [ -z "$CHECK_LICENSES" ] && [ -z "$TARBALL" ] && [ -z "$CLANG_TIDY" ]; then
+if [ -z "$EMSCRIPTEN_VERSION" ] && [ -z "$CHECK_LICENSES" ] && [ -z "$TARBALL" ] && [ -z "$CLANG_TIDY" ] ; then
     echo "Building libheif ..."
     make -j $(nproc)
-    if [ "$CURRENT_OS" = "linux" ] && [ -z "$CMAKE" ] && [ -z "$MINGW" ] && [ -z "$FUZZER" ]; then
+    if [ "$CURRENT_OS" = "linux" ] && [ -z "$MINGW" ] && [ -z "$FUZZER" ] && [ ! -z "$TESTS" ] ; then
         echo "Running tests ..."
         make test
     fi
-    echo "Dumping information of sample file ..."
-    ${BIN_WRAPPER} ./examples/heif-info${BIN_SUFFIX} --dump-boxes examples/example.heic
-    if [ ! -z "$WITH_GRAPHICS" ] && [ ! -z "$WITH_HEIF_DECODER" ]; then
-        echo "Converting sample HEIF file to JPEG ..."
-        ${BIN_WRAPPER} ./examples/heif-convert${BIN_SUFFIX} examples/example.heic example.jpg
-        echo "Checking first generated file ..."
-        [ -s "example-1.jpg" ] || exit 1
-        echo "Checking second generated file ..."
-        [ -s "example-2.jpg" ] || exit 1
-        echo "Converting sample HEIF file to PNG ..."
-        ${BIN_WRAPPER} ./examples/heif-convert${BIN_SUFFIX} examples/example.heic example.png
-        echo "Checking first generated file ..."
-        [ -s "example-1.png" ] || exit 1
-        echo "Checking second generated file ..."
-        [ -s "example-2.png" ] || exit 1
-    fi
-    if [ ! -z "$WITH_GRAPHICS" ] && [ ! -z "$WITH_AVIF_DECODER" ]; then
-        echo "Converting sample AVIF file to JPEG ..."
-        ${BIN_WRAPPER} ./examples/heif-convert${BIN_SUFFIX} examples/example.avif example.jpg
-        echo "Checking generated file ..."
-        [ -s "example.jpg" ] || exit 1
-        echo "Converting sample AVIF file to PNG ..."
-        ${BIN_WRAPPER} ./examples/heif-convert${BIN_SUFFIX} examples/example.avif example.png
-        echo "Checking generated file ..."
-        [ -s "example.png" ] || exit 1
-    fi
-    if [ ! -z "$WITH_GRAPHICS" ] && [ ! -z "$WITH_HEIF_ENCODER" ]; then
-        echo "Converting single JPEG file to heif ..."
-        ${BIN_WRAPPER} ./examples/heif-enc${BIN_SUFFIX} -o output-single.heic -v -v -v --thumb 320x240 example-1.jpg
-        echo "Checking generated file ..."
-        [ -s "output-single.heic" ] || exit 1
-        echo "Converting back generated heif to JPEG ..."
-        ${BIN_WRAPPER} ./examples/heif-convert${BIN_SUFFIX} output-single.heic output-single.jpg
-        echo "Checking generated file ..."
-        [ -s "output-single.jpg" ] || exit 1
-        echo "Converting multiple JPEG files to heif ..."
-        ${BIN_WRAPPER} ./examples/heif-enc${BIN_SUFFIX} -o output-multi.heic -v -v -v --thumb 320x240 example-1.jpg example-2.jpg
-        echo "Checking generated file ..."
-        [ -s "output-multi.heic" ] || exit 1
-        ${BIN_WRAPPER} ./examples/heif-convert${BIN_SUFFIX} output-multi.heic output-multi.jpg
-        echo "Checking first generated file ..."
-        [ -s "output-multi-1.jpg" ] || exit 1
-        echo "Checking second generated file ..."
-        [ -s "output-multi-2.jpg" ] || exit 1
-    fi
-    if [ ! -z "$WITH_GRAPHICS" ] && [ ! -z "$WITH_AVIF_ENCODER" ]; then
-        echo "Converting JPEG file to AVIF ..."
-        ${BIN_WRAPPER} ./examples/heif-enc${BIN_SUFFIX} -o output-jpeg.avif -v -v -v -A --thumb 320x240 example.jpg
-        echo "Checking generated file ..."
-        [ -s "output-jpeg.avif" ] || exit 1
-        echo "Converting back generated AVIF to JPEG ..."
-        ${BIN_WRAPPER} ./examples/heif-convert${BIN_SUFFIX} output-jpeg.avif output-jpeg.jpg
-        echo "Checking generated file ..."
-        [ -s "output-jpeg.jpg" ] || exit 1
-    fi
-    if [ ! -z "$GO" ]; then
-        echo "Installing library ..."
-        make -j $(nproc) install
+    if [ -z "$FUZZER" ] ; then
+        echo "Dumping information of sample file ..."
+        ${BIN_WRAPPER} ./examples/heif-info${BIN_SUFFIX} --dump-boxes examples/example.heic
+        if [ ! -z "$WITH_GRAPHICS" ] && [ ! -z "$WITH_HEIF_DECODER" ]; then
+            echo "Converting sample HEIF file to JPEG ..."
+            ${BIN_WRAPPER} ./examples/heif-convert${BIN_SUFFIX} examples/example.heic example.jpg
+            echo "Checking first generated file ..."
+            [ -s "example-1.jpg" ] || exit 1
+            echo "Checking second generated file ..."
+            [ -s "example-2.jpg" ] || exit 1
+            echo "Converting sample HEIF file to PNG ..."
+            ${BIN_WRAPPER} ./examples/heif-convert${BIN_SUFFIX} examples/example.heic example.png
+            echo "Checking first generated file ..."
+            [ -s "example-1.png" ] || exit 1
+            echo "Checking second generated file ..."
+            [ -s "example-2.png" ] || exit 1
+        fi
+        if [ ! -z "$WITH_GRAPHICS" ] && [ ! -z "$WITH_AVIF_DECODER" ]; then
+            echo "Converting sample AVIF file to JPEG ..."
+            ${BIN_WRAPPER} ./examples/heif-convert${BIN_SUFFIX} examples/example.avif example.jpg
+            echo "Checking generated file ..."
+            [ -s "example.jpg" ] || exit 1
+            echo "Converting sample AVIF file to PNG ..."
+            ${BIN_WRAPPER} ./examples/heif-convert${BIN_SUFFIX} examples/example.avif example.png
+            echo "Checking generated file ..."
+            [ -s "example.png" ] || exit 1
+        fi
+        if [ ! -z "$WITH_GRAPHICS" ] && [ ! -z "$WITH_HEIF_ENCODER" ]; then
+            echo "Converting single JPEG file to heif ..."
+            ${BIN_WRAPPER} ./examples/heif-enc${BIN_SUFFIX} -o output-single.heic -v -v -v --thumb 320x240 example-1.jpg
+            echo "Checking generated file ..."
+            [ -s "output-single.heic" ] || exit 1
+            echo "Converting back generated heif to JPEG ..."
+            ${BIN_WRAPPER} ./examples/heif-convert${BIN_SUFFIX} output-single.heic output-single.jpg
+            echo "Checking generated file ..."
+            [ -s "output-single.jpg" ] || exit 1
+            echo "Converting multiple JPEG files to heif ..."
+            ${BIN_WRAPPER} ./examples/heif-enc${BIN_SUFFIX} -o output-multi.heic -v -v -v --thumb 320x240 example-1.jpg example-2.jpg
+            echo "Checking generated file ..."
+            [ -s "output-multi.heic" ] || exit 1
+            ${BIN_WRAPPER} ./examples/heif-convert${BIN_SUFFIX} output-multi.heic output-multi.jpg
+            echo "Checking first generated file ..."
+            [ -s "output-multi-1.jpg" ] || exit 1
+            echo "Checking second generated file ..."
+            [ -s "output-multi-2.jpg" ] || exit 1
+        fi
+        if [ ! -z "$WITH_GRAPHICS" ] && [ ! -z "$WITH_AVIF_ENCODER" ]; then
+            echo "Converting JPEG file to AVIF ..."
+            ${BIN_WRAPPER} ./examples/heif-enc${BIN_SUFFIX} -o output-jpeg.avif -v -v -v -A --thumb 320x240 example.jpg
+            echo "Checking generated file ..."
+            [ -s "output-jpeg.avif" ] || exit 1
+            echo "Converting back generated AVIF to JPEG ..."
+            ${BIN_WRAPPER} ./examples/heif-convert${BIN_SUFFIX} output-jpeg.avif output-jpeg.jpg
+            echo "Checking generated file ..."
+            [ -s "output-jpeg.jpg" ] || exit 1
+        fi
+        if [ ! -z "$GO" ]; then
+            echo "Installing library ..."
+            make -j $(nproc) install
 
-        echo "Running golang example ..."
-        export GOPATH="$BUILD_ROOT/gopath"
-        export PKG_CONFIG_PATH="$BUILD_ROOT/dist/lib/pkgconfig:$BUILD_ROOT/libde265/dist/lib/pkgconfig/"
-        export LD_LIBRARY_PATH="$BUILD_ROOT/dist/lib"
-        mkdir -p "$GOPATH/src/github.com/strukturag"
-        ln -s "$BUILD_ROOT" "$GOPATH/src/github.com/strukturag/libheif"
-        go run examples/heif-test.go examples/example.heic
-        echo "Checking first generated file ..."
-        [ -s "examples/example_lowlevel.png" ] || exit 1
-        echo "Checking second generated file ..."
-        [ -s "examples/example_highlevel.png" ] || exit 1
-        echo "Checking race tester ..."
-        go run tests/test-race.go examples/example.heic
+            echo "Running golang example ..."
+            export GOPATH="$BUILD_ROOT/gopath"
+            export PKG_CONFIG_PATH="$BUILD_ROOT/dist/lib/pkgconfig:$BUILD_ROOT/libde265/dist/lib/pkgconfig/"
+            export LD_LIBRARY_PATH="$BUILD_ROOT/dist/lib"
+            mkdir -p "$GOPATH/src/github.com/strukturag"
+            ln -s "$BUILD_ROOT" "$GOPATH/src/github.com/strukturag/libheif"
+            go run examples/heif-test.go examples/example.heic
+            echo "Checking first generated file ..."
+            [ -s "examples/example_lowlevel.png" ] || exit 1
+            echo "Checking second generated file ..."
+            [ -s "examples/example_highlevel.png" ] || exit 1
+            echo "Checking race tester ..."
+            go run tests/test-race.go examples/example.heic
+        fi
     fi
 fi
 
@@ -238,9 +242,6 @@ if [ ! -z "$TARBALL" ]; then
         CONFIGURE_ARGS="$CONFIGURE_ARGS --prefix=$BUILD_ROOT/dist --disable-gdk-pixbuf"
     else
         CONFIGURE_ARGS="$CONFIGURE_ARGS --disable-go"
-    fi
-    if [ ! -z "$TESTS" ]; then
-        CONFIGURE_ARGS="$CONFIGURE_ARGS --enable-tests"
     fi
     if [ "$WITH_RAV1E" = "1" ]; then
         CONFIGURE_ARGS="$CONFIGURE_ARGS --enable-local-rav1e"
@@ -261,13 +262,16 @@ if [ ! -z "$TARBALL" ]; then
 fi
 
 if [ ! -z "$FUZZER" ] && [ "$CURRENT_OS" = "linux" ]; then
-    ./libheif/color-conversion-fuzzer ./fuzzing/corpus/*color-conversion-fuzzer*
-    ./libheif/file-fuzzer ./fuzzing/corpus/*.heic
+    ./fuzzing/color_conversion_fuzzer ./fuzzing/data/corpus/*color-conversion-fuzzer*
+    ./fuzzing/file_fuzzer ./fuzzing/data/corpus/*.heic
 
     echo "Running color conversion fuzzer ..."
-    ./libheif/color-conversion-fuzzer -max_total_time=120
-    echo "Running encoder fuzzer ..."
-    ./libheif/encoder-fuzzer -max_total_time=120
+    ./fuzzing/color_conversion_fuzzer -max_total_time=120
+
+    # Do not run encoder_fuzzer because it will just find errors in x265...
+    #echo "Running encoder fuzzer ..."
+    #./fuzzing/encoder_fuzzer -max_total_time=120
+    
     echo "Running file fuzzer ..."
-    ./libheif/file-fuzzer -dict=./fuzzing/dictionary.txt -max_total_time=120
+    ./fuzzing/file_fuzzer -dict=./fuzzing/data/dictionary.txt -max_total_time=120
 fi

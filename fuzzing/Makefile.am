@@ -1,3 +1,3 @@
 EXTRA_DIST = \
-    corpus/*.heic \
-    dictionary.txt
+    data/corpus/*.heic \
+    data/dictionary.txt
