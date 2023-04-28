@@ -54,7 +54,7 @@ namespace heif {
 
     const std::vector<Component>& get_components() const { return m_components; }
 
-  protected:
+  public: //TOTO - protected:
     Error parse(BitstreamRange& range) override;
 
     std::vector<Component> m_components;

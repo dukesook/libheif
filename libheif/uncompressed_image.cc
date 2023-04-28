@@ -199,8 +199,31 @@ namespace heif {
     writer.write16(m_components.size());
 
     for (int i = 0; i < m_components.size(); i++) {
-      
+      auto comp = m_components[i];
+      writer.write16(comp.component_index);
+      writer.write8(comp.component_bit_depth_minus_one);
+      writer.write8(comp.component_format);
+      writer.write8(comp.component_align_size);
     }
+
+    writer.write8(m_sampling_type);
+    writer.write8(m_interleave_type);
+    writer.write8(m_block_size);
+
+    uint8_t flags = 0;
+    m_components_little_endian ? flags |= 0b10000000 : flags;
+    m_block_pad_lsb            ? flags |= 0b01000000 : flags;
+    m_block_little_endian      ? flags |= 0b00100000 : flags;
+    m_block_reversed           ? flags |= 0b00010000 : flags;
+    m_pad_unknown              ? flags |= 0b00001000 : flags;
+    flags |= (0 & 0x07); //3 bits
+    writer.write8(flags);
+
+    writer.write8(m_pixel_size);
+    writer.write32(m_row_align_size);
+    writer.write32(m_tile_align_size);
+    writer.write32(m_num_tile_cols_minus_one);
+    writer.write32(m_num_tile_rows_minus_one);
 
     prepend_header(writer, box_start);
 
@@ -631,9 +654,33 @@ namespace heif {
     //Property - uncC
     auto uncC = std::make_shared<Box_uncC>();
     uncC->m_profile = 0;
-    // std::vector<Component> m_components;
+    {
+      Box_uncC::Component r;
+      r.component_index = 0;
+      r.component_bit_depth_minus_one = 0x7;
+      r.component_format = 0;
+      r.component_align_size = 0;
+
+      Box_uncC::Component g;
+      g.component_index = 1;
+      g.component_bit_depth_minus_one = 0x7;
+      g.component_format = 0;
+      g.component_align_size = 0;
+
+      Box_uncC::Component b;
+      b.component_index = 2;
+      b.component_bit_depth_minus_one = 0x7;
+      b.component_format = 0;
+      b.component_align_size = 0;
+
+      uncC->m_components.push_back(r);
+      uncC->m_components.push_back(g);
+      uncC->m_components.push_back(b);
+    }
+
+
     uncC->m_sampling_type = 0;
-    uncC->m_interleave_type = 0;
+    uncC->m_interleave_type = 1;
     uncC->m_block_size = 0;
     uncC->m_components_little_endian = 0;
     uncC->m_block_pad_lsb = 0;
@@ -650,7 +697,20 @@ namespace heif {
 
     //Property - cmpd
     auto cmpd = std::make_shared<Box_cmpd>();
+    {
+      Box_cmpd::Component r, g, b;
+      r.component_type = 4;
+      g.component_type = 5;
+      b.component_type = 6;
+      cmpd->m_components.push_back(r);
+      cmpd->m_components.push_back(g);
+      cmpd->m_components.push_back(b);
+    }
+
+
     heif_file->add_property(image_id, cmpd);
+
+
 
 
 
