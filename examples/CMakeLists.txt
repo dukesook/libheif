@@ -52,6 +52,10 @@ add_executable(heif-test ${getopt_sources}
         heif_test.cc)
 target_link_libraries(heif-test heif ${CMAKE_THREAD_LIBS_INIT})
 
+############################ NGIIS ############################
+add_executable(ngiis-encode ngiis_encode.cpp)
+target_link_libraries(ngiis-encode heif ${CMAKE_THREAD_LIBS_INIT})
+############################ NGIIS ############################
 
 find_package(JPEG)
 if (JPEG_FOUND)
