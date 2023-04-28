@@ -196,7 +196,12 @@ namespace heif {
     size_t box_start = reserve_box_header_space(writer);
 
     writer.write32(m_profile);
-    // TODO: this is not complete
+    writer.write16(m_components.size());
+
+    for (int i = 0; i < m_components.size(); i++) {
+      
+    }
+
     prepend_header(writer, box_start);
 
     return Error::Ok;
@@ -595,11 +600,59 @@ namespace heif {
                                                           const std::shared_ptr<HeifPixelImage>& src_image,
                                                           void* encoder_struct,
                                                           const struct heif_encoding_options& options,
-                                                          std::shared_ptr<HeifContext::Image> out_image)
+                                                          std::shared_ptr<HeifContext::Image> out_image,
+                                                          std::vector<uint8_t> encoded_data)
   {
-    //encoder_struct_uncompressed* encoder = (encoder_struct_uncompressed*)encoder_struct;
-
     printf("UNCOMPRESSED\n");
+    encoder_struct_uncompressed* encoder = (encoder_struct_uncompressed*)encoder_struct;
+    
+    int stride;
+    const uint8_t* data = src_image->get_plane(heif_channel_interleaved, &stride);
+    int width = src_image->get_width();
+    int height = src_image->get_height();
+    int band_count = 3;
+    int byte_count = width * height * band_count;
+
+    out_image->set_resolution(width, height);
+    int image_id = 1;
+
+
+    //MDAT
+    for (int i = 0; i < byte_count; i++) {
+      encoded_data.push_back(data[i]);
+    }
+    heif_file->append_iloc_data(image_id, encoded_data);
+
+
+    //Property - ispe
+    heif_file->add_ispe_property(image_id, width, height);
+
+
+    //Property - uncC
+    auto uncC = std::make_shared<Box_uncC>();
+    uncC->m_profile = 0;
+    // std::vector<Component> m_components;
+    uncC->m_sampling_type = 0;
+    uncC->m_interleave_type = 0;
+    uncC->m_block_size = 0;
+    uncC->m_components_little_endian = 0;
+    uncC->m_block_pad_lsb = 0;
+    uncC->m_block_little_endian = 0;
+    uncC->m_block_reversed = 0;
+    uncC->m_pad_unknown = 0;
+    uncC->m_pixel_size = 0;
+    uncC->m_row_align_size = 0;
+    uncC->m_tile_align_size = 0;
+    uncC->m_num_tile_cols_minus_one = 0;
+    uncC->m_num_tile_rows_minus_one = 0;
+    heif_file->add_property(image_id, uncC);
+
+
+    //Property - cmpd
+    auto cmpd = std::make_shared<Box_cmpd>();
+    heif_file->add_property(image_id, cmpd);
+
+
 
 #if 0
     Box_uncC::configuration config;

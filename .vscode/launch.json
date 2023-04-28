@@ -36,7 +36,7 @@
             "args": [
                 "~/Pictures/Flowers.heic",
                 "ngiis-encode.heif",
-                "1",
+                "4",
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/build/examples/",

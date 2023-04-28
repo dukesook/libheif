@@ -22,6 +22,7 @@
 #define LIBHEIF_HEIF_ENCODER_UNCOMPRESSED_H
 
 #include "libheif/common_utils.h"
+#include <vector>
 
 // This is a dummy module. It does not actually do anything except parameter parsing.
 // The actual codec is included in the library.
@@ -39,8 +40,8 @@ struct encoder_struct_uncompressed
 
   // --- output
 
-  //bool data_read = false;
-  //std::vector<uint8_t> compressedData;
+  bool data_read = false;
+  std::vector<uint8_t> compressedData;
 };
 
 
