@@ -22,6 +22,12 @@ add_executable(ngiis-encode ${getopt_sources}
 target_link_libraries(ngiis-encode heif)
 install(TARGETS ngiis-encode RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES ngiis-encode.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+
+add_executable(ngiis-metadata ${getopt_sources}
+        ngiis_metadata.cpp)
+target_link_libraries(ngiis-metadata heif)
+install(TARGETS ngiis-metadata RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(FILES ngiis-metadata.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
 #************************* NGIIS *************************#
 
 add_executable(heif-convert ${getopt_sources}
