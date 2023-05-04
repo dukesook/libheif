@@ -39,10 +39,10 @@ static void heif_to_heif(string input_filename, string output_filename, heif_com
   //ADD METADATA
   struct heif_property_user_description udes = {
     1,
-    "my lang",
-    "my name",
-    "my des",
-    "my tags"
+    "English",
+    "Examples udes box",
+    "Demonstrate how to use a user description box",
+    "Insert tags here"
   };
   heif_property_id* out_propertyId;
   heif_item_add_property_user_description(ctx2, 1, &udes, out_propertyId);
