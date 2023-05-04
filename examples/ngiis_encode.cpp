@@ -93,8 +93,8 @@ int main(int argc, char* argv[]) {
   This ensures you that every branch has a framework for running examples.
   
   If you want to push back to libheif, you need two branches:
-    One branch that's intended to be pushed.
-    An identical branch with examples running your new code.
+    1. One branch that's intended to be pushed. It's easy to just remove personal examples
+    2. An identical branch with examples running your new code.
 
   Other programs shall not depend on this repository because it switches
   between branches so frequently. Other programs need to depend on a
