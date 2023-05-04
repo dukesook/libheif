@@ -16,6 +16,13 @@ target_link_libraries(heif-info heif)
 install(TARGETS heif-info RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES heif-info.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
 
+#************************* NGIIS *************************#
+add_executable(ngiis-encode ${getopt_sources}
+        ngiis_encode.cpp)
+target_link_libraries(ngiis-encode heif)
+install(TARGETS ngiis-encode RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(FILES ngiis-encode.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+#************************* NGIIS *************************#
 
 add_executable(heif-convert ${getopt_sources}
         encoder.cc
