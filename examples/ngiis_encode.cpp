@@ -52,10 +52,11 @@ int main(int argc, char* argv[]) {
   char* exe_path = argv[0];
   char* input_filename = argv[1];
   char* output_filename = argv[2];
-  int option = atoi(argv[3]);
+  int compression = atoi(argv[3]);
+  
   heif_compression_format codec = heif_compression_HEVC;
 
-  switch(option) {
+  switch(compression) {
     case 1:
       codec = heif_compression_HEVC;
     break;
@@ -67,9 +68,6 @@ int main(int argc, char* argv[]) {
     break;
     case 4:
       codec = heif_compression_uncompressed;
-    break;
-    case 5:
-      codec = heif_compression_HEVC;
     break;
   }
   

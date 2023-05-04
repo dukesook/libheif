@@ -39,7 +39,7 @@
             "args": [
                 "~/Pictures/Uncompressed/squares.heif",
                 "out/uncC_squares.heif",
-                "4",
+                "1", 
             ],
             "stopAtEntry": false,
             "environment": [],
