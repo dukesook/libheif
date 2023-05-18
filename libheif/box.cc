@@ -3836,10 +3836,13 @@ void Box_cdef::set_channels(heif_chroma chroma) {
 
   switch (chroma) {
     case heif_chroma_interleaved_RGB:
+    case heif_chroma_420:
       m_channels.push_back({0, TYPE_COLOR, ASOC_RED});
       m_channels.push_back({1, TYPE_COLOR, ASOC_GREEN});
       m_channels.push_back({2, TYPE_COLOR, ASOC_BLUE});
     break;
+
+
 
     case heif_chroma_monochrome:
       m_channels.push_back({0, TYPE_COLOR, ASOC_GREY});
