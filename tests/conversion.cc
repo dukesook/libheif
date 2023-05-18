@@ -27,9 +27,7 @@
 #include <iomanip>
 #include "catch.hpp"
 #include "libheif/color-conversion/colorconversion.h"
-#include "libheif/heif_image.h"
-
-using namespace heif;
+#include "libheif/pixelimage.h"
 
 // Enable for more verbose test output.
 #define DEBUG_ME 0
@@ -114,9 +112,12 @@ std::string PrintChannel(const HeifPixelImage& image, heif_channel channel) {
  }
 }
 
+// Returns the PSNR between 'original' and 'compressed' images.
+// If expect_alpha_max is true, then alpha values in 'compressed' are expected
+// to be equal to (1<<bpp)-1 rather than the alpha value in the original image.
 template <typename T>
 double GetPsnr(const HeifPixelImage& original, const HeifPixelImage& compressed,
-               heif_channel channel, bool skip_alpha) {
+               heif_channel channel, bool expect_alpha_max) {
   int w = original.get_width(channel);
   int h = original.get_height(channel);
   heif_chroma chroma = original.get_chroma_format();
@@ -130,11 +131,15 @@ double GetPsnr(const HeifPixelImage& original, const HeifPixelImage& compressed,
   double mse = 0.0;
 
   int num_interleaved = num_interleaved_pixels_per_plane(chroma);
-  bool is_interleaved = num_interleaved > 1;
+  int alpha_max = (1 << original.get_bits_per_pixel(channel)) - 1;
+  CAPTURE(expect_alpha_max);
   for (int y = 0; y < h; y++) {
     for (int x = 0; x < w * num_interleaved; x++) {
-      if (skip_alpha && is_interleaved && x % 4 == 3) continue;
       int orig_v = SwapBytesIfNeeded(orig_p[y * orig_stride + x], chroma);
+      if (expect_alpha_max && (channel == heif_channel_Alpha ||
+                               ((num_interleaved == 4) && x % 4 == 3))) {
+        orig_v = alpha_max;
+      }
       int compressed_v = SwapBytesIfNeeded(compressed_p[y * compressed_stride + x], chroma);
       int d = orig_v - compressed_v;
       mse += d * d;
@@ -149,11 +154,11 @@ double GetPsnr(const HeifPixelImage& original, const HeifPixelImage& compressed,
 }
 
 double GetPsnr(const HeifPixelImage& original, const HeifPixelImage& compressed,
-            heif_channel channel, bool skip_alpha) {
+            heif_channel channel, bool expect_alpha_max) {
  if (original.get_bits_per_pixel(channel) <= 8) {
-    return GetPsnr<uint8_t>(original, compressed, channel, skip_alpha);
+    return GetPsnr<uint8_t>(original, compressed, channel, expect_alpha_max);
  } else {
-    return GetPsnr<uint16_t>(original, compressed, channel, skip_alpha);
+    return GetPsnr<uint16_t>(original, compressed, channel, expect_alpha_max);
  }
 }
 
@@ -254,10 +259,10 @@ void TestConversion(const std::string& test_name, const ColorState& input_state,
   if (!supported) return;
   INFO("conversion pipeline: " << pipeline.debug_dump_pipeline());
 
-  auto in_image = std::make_shared<heif::HeifPixelImage>();
+  auto in_image = std::make_shared<HeifPixelImage>();
   // Width and height are multiples of 4.
   int width = 12;
-  int height = 8; 
+  int height = 8;
   REQUIRE(MakeTestImage(input_state, width, height, in_image.get()));
 
   std::shared_ptr<HeifPixelImage> out_image =
@@ -273,7 +278,15 @@ void TestConversion(const std::string& test_name, const ColorState& input_state,
     CHECK(out_image->get_plane(plane.channel, &stride) != nullptr);
     CHECK(out_image->get_bits_per_pixel(plane.channel) ==
           target_state.bits_per_pixel);
+    // If an alpha plane was created from nothing, check that it's filled
+    // with the max alpha value.
+    if (plane.channel == heif_channel_Alpha && !input_state.has_alpha) {
+      double alpha_psnr = GetPsnr(*out_image, *out_image, heif_channel_Alpha,
+                                  /*expect_alpha_max=*/true);
+      REQUIRE(alpha_psnr == 100.f);
+    }
   }
+
 
   // Convert back in the other direction (if supported).
   ColorConversionPipeline reverse_pipeline;
@@ -283,7 +296,9 @@ void TestConversion(const std::string& test_name, const ColorState& input_state,
     std::shared_ptr<HeifPixelImage> recovered_image =
         reverse_pipeline.convert_image(out_image);
     REQUIRE(recovered_image != nullptr);
-    bool skip_alpha = !input_state.has_alpha || !target_state.has_alpha;
+    // If the alpha plane was lost in the target state, it should come back
+    // as the max value for the given bpp, i.e. (1<<bpp)-1
+    bool expect_alpha_max = !target_state.has_alpha;
     bool expect_lossless =
         input_state.colorspace == target_state.colorspace &&
         input_state.bits_per_pixel == target_state.bits_per_pixel &&
@@ -295,7 +310,6 @@ void TestConversion(const std::string& test_name, const ColorState& input_state,
     double expected_psnr = expect_lossless ? 100. : 40.;
 
     for (const Plane& plane : GetPlanes(input_state, width, height)) {
-      if (skip_alpha && plane.channel == heif_channel_Alpha) continue;
       INFO("Channel: " << plane.channel << " (set DEBUG_ME to 1 in the code for more info)");
 #if DEBUG_ME
       INFO("Original:\n" << PrintChannel(*in_image, plane.channel));
@@ -307,7 +321,7 @@ void TestConversion(const std::string& test_name, const ColorState& input_state,
                       << PrintChannel(*out_image, converted_plane.channel));
       }
 #endif
-      double psnr = GetPsnr(*in_image, *recovered_image, plane.channel, skip_alpha);
+      double psnr = GetPsnr(*in_image, *recovered_image, plane.channel, expect_alpha_max);
       CHECK(psnr >= expected_psnr);
     }
   }
@@ -481,4 +495,73 @@ TEST_CASE("Sharp yuv conversion", "[heif_image]") {
       "### interleaved RGBA -> YCbCr 422 with sharp yuv (not supported!)",
       {heif_colorspace_RGB, heif_chroma_interleaved_RGBA, true, 8},
       {heif_colorspace_YCbCr, heif_chroma_422, false, 8}, sharp_yuv_options);
+}
+
+
+static void fill_plane(std::shared_ptr<HeifPixelImage>& img, heif_channel channel, int w, int h, const std::vector<uint8_t>& pixels)
+{
+  img->add_plane(channel, w, h, 8);
+
+  int stride;
+  uint8_t* p = img->get_plane(channel, &stride);
+
+  for (int y = 0; y < h; y++) {
+    for (int x = 0; x < w; x++) {
+      p[y * stride + x] = pixels[y * w + x];
+    }
+  }
+}
+
+
+static void assert_plane(std::shared_ptr<HeifPixelImage>& img, heif_channel channel, const std::vector<uint8_t>& pixels)
+{
+  int w = img->get_width(channel);
+  int h = img->get_height(channel);
+
+  int stride;
+  uint8_t* p = img->get_plane(channel, &stride);
+
+  for (int y = 0; y < h; y++) {
+    for (int x = 0; x < w; x++) {
+      REQUIRE((int)p[y * stride + x] == (int)pixels[y * w + x]);
+    }
+  }
+}
+
+
+TEST_CASE("Bilinear upsampling", "[heif_image]")
+{
+  heif_color_conversion_options options = {
+      .preferred_chroma_upsampling_algorithm = heif_chroma_upsampling_bilinear,
+      .only_use_preferred_chroma_algorithm = true};
+
+  std::shared_ptr<HeifPixelImage> img = std::make_shared<HeifPixelImage>();
+  img->create(4, 4, heif_colorspace_YCbCr, heif_chroma_420);
+
+  img->fill_new_plane(heif_channel_Y, 128, 4,4, 8);
+  fill_plane(img, heif_channel_Cb, 2,2,
+             {10, 40,
+              100, 240});
+  fill_plane(img, heif_channel_Cr, 2, 2,
+             {255, 200,
+              50, 0});
+
+  std::shared_ptr<HeifPixelImage> out = convert_colorspace(img, heif_colorspace_YCbCr, heif_chroma_444, nullptr, 8, options);
+
+  assert_plane(out, heif_channel_Cb,
+               {
+                   10, 18, 33, 40,
+                   33, 47, 76, 90,
+                   78, 106, 162, 190,
+                   100, 135, 205, 240
+               });
+
+
+  assert_plane(out, heif_channel_Cr,
+               {
+                   255, 241, 214, 200,
+                   204, 190, 163, 150,
+                   101, 88, 63, 50,
+                   50, 38, 13, 0
+               });
 }

@@ -77,3 +77,26 @@ int main(int argc, char* argv[]) {
   return 0;
 }
 
+//***** README ******//
+/*
+  The examples_master branch:
+    - should always be synced with libheif master.
+    - provides examples for using the latest version of libheif.
+      This could be done in another project, but is added here for
+      convenience & running the debugger.
+    - changes CMakeLists.txt to generate example executables & allow warnings
+    - adds ngiis_xxxxxx.cpp source code
+    - Tracks launch.json. I'm sick of re-writing this file.
+    - makes no other changes to libheif to prevent git merge conflicts
+
+  All personal branches should branch off of examples_master, not master.
+  This ensures you that every branch has a framework for running examples.
+  
+  If you want to push back to libheif, you need two branches:
+    1. One branch that's intended to be pushed. It's easy to just remove personal examples
+    2. An identical branch with examples running your new code.
+
+  Other programs shall not depend on this repository because it switches
+  between branches so frequently. Other programs need to depend on a
+  lit (locked in time) repository found in ~/lit/
+*/
