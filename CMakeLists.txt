@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.0)
 
-project(libheif LANGUAGES C CXX VERSION 1.15.2)
+project(libheif LANGUAGES C CXX VERSION 1.16.1)
 
 # https://cmake.org/cmake/help/v3.1/policy/CMP0054.html
 cmake_policy(VERSION 3.0...3.22)
@@ -22,7 +22,7 @@ endif()
 
 if(NOT MSVC)
   add_definitions(-Wall)
-  add_definitions(-Werror)
+#   add_definitions(-Werror)
   add_definitions(-Wsign-compare)
   add_definitions(-Wconversion)
   add_definitions(-Wno-sign-conversion)
@@ -151,7 +151,6 @@ if (OpenJPEG_FOUND AND NOT WITH_OpenJPEG_PLUGIN)
     list(APPEND REQUIRES_PRIVATE "OpenJPEG")
 endif()
 list(JOIN REQUIRES_PRIVATE " " REQUIRES_PRIVATE)
-set(VERSION ${PROJECT_VERSION})
 
 configure_file(libheif.pc.in ${CMAKE_CURRENT_BINARY_DIR}/libheif.pc @ONLY)
 
@@ -161,6 +160,7 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libheif.pc
 # ---
 
 option(WITH_EXAMPLES "Build examples" ON)
+option(WITH_GDK_PIXBUF "Build gdk-pixbuf plugin" ON)
 
 option(WITH_REDUCED_VISIBILITY "Reduced symbol visibility in library" ON)
 
@@ -196,12 +196,15 @@ endif()
 # --- Fuzzing
 
 option(WITH_FUZZERS "Build the fuzzers (and no other executables)" OFF)
+set(FUZZING_C_COMPILER "clang" CACHE STRING "C compiler to use for fuzzing")
+set(FUZZING_CXX_COMPILER "clang++" CACHE STRING "C++ compiler to use for fuzzing")
 set(FUZZING_COMPILE_OPTIONS "-fsanitize=fuzzer,address,shift,integer -fno-sanitize-recover=shift,integer" CACHE STRING "Compiler options for fuzzing")
 set(FUZZING_LINKER_OPTIONS "" CACHE STRING "Additional linking options for fuzzing")
 
 if (WITH_FUZZERS)
-    set(CMAKE_C_COMPILER "clang")
-    set(CMAKE_CXX_COMPILER "clang++")
+    set(CMAKE_C_COMPILER ${FUZZING_C_COMPILER})
+    set(CMAKE_CXX_COMPILER ${FUZZING_CXX_COMPILER})
+    message("Using compiler: ${CMAKE_CXX_COMPILER}")
     separate_arguments(FUZZING_COMPILE_OPTIONS UNIX_COMMAND "${FUZZING_COMPILE_OPTIONS}")
     separate_arguments(FUZZING_LINKER UNIX_COMMAND "${FUZZING_LINKER_OPTIONS}")
     add_compile_options(${FUZZING_COMPILE_OPTIONS})
@@ -215,13 +218,19 @@ if (CMAKE_CXX_COMPILER MATCHES "clang\\+\\+$")
 endif()
 
 add_subdirectory (libheif)
-add_subdirectory (gdk-pixbuf)
+
+if (WITH_GDK_PIXBUF)
+  add_subdirectory (gdk-pixbuf)
+endif()
+
 add_subdirectory (gnome)
 
 
 # --- packaging (source code)
 
 set(CPACK_VERBATIM_VARIABLES YES)
+set(CPACK_SOURCE_GENERATOR TGZ)
+set(CPACK_SOURCE_PACKAGE_FILE_NAME libheif-${PACKAGE_VERSION})
 set(CPACK_SOURCE_IGNORE_FILES
 /.git/
 /.github/

@@ -25,7 +25,7 @@
 #endif
 
 #include "box.h"
-#include "heif_limits.h"
+#include "security_limits.h"
 #include "nclx.h"
 
 #include <iomanip>
@@ -38,8 +38,6 @@
 #if WITH_UNCOMPRESSED_CODEC
 #include "uncompressed_image.h"
 #endif
-
-using namespace heif;
 
 
 Fraction::Fraction(int32_t num, int32_t den)
@@ -135,7 +133,7 @@ uint32_t from_fourcc(const char* string)
           (string[3]));
 }
 
-std::string heif::to_fourcc(uint32_t code)
+std::string to_fourcc(uint32_t code)
 {
   std::string str("    ");
   str[0] = static_cast<char>((code >> 24) & 0xFF);
@@ -147,10 +145,10 @@ std::string heif::to_fourcc(uint32_t code)
 }
 
 
-heif::BoxHeader::BoxHeader() = default;
+BoxHeader::BoxHeader() = default;
 
 
-std::vector<uint8_t> heif::BoxHeader::get_type() const
+std::vector<uint8_t> BoxHeader::get_type() const
 {
   if (m_type == fourcc("uuid")) {
     return m_uuid_type;
@@ -166,7 +164,7 @@ std::vector<uint8_t> heif::BoxHeader::get_type() const
 }
 
 
-std::string heif::BoxHeader::get_type_string() const
+std::string BoxHeader::get_type_string() const
 {
   if (m_type == fourcc("uuid")) {
     // 8-4-4-4-12
@@ -192,7 +190,7 @@ std::string heif::BoxHeader::get_type_string() const
 }
 
 
-heif::Error heif::BoxHeader::parse_header(BitstreamRange& range)
+Error BoxHeader::parse_header(BitstreamRange& range)
 {
   StreamReader::grow_status status;
   status = range.wait_for_available_bytes(8);
@@ -253,7 +251,7 @@ heif::Error heif::BoxHeader::parse_header(BitstreamRange& range)
 }
 
 
-int heif::Box::calculate_header_size(bool data64bit) const
+int Box::calculate_header_size(bool data64bit) const
 {
   int header_size = 8;  // does not include "FullBox" fields.
 
@@ -269,7 +267,7 @@ int heif::Box::calculate_header_size(bool data64bit) const
 }
 
 
-size_t heif::Box::reserve_box_header_space(StreamWriter& writer, bool data64bit) const
+size_t Box::reserve_box_header_space(StreamWriter& writer, bool data64bit) const
 {
   size_t start_pos = writer.get_position();
 
@@ -281,7 +279,7 @@ size_t heif::Box::reserve_box_header_space(StreamWriter& writer, bool data64bit)
 }
 
 
-size_t heif::FullBox::reserve_box_header_space(StreamWriter& writer, bool data64bit) const
+size_t FullBox::reserve_box_header_space(StreamWriter& writer, bool data64bit) const
 {
   size_t start_pos = Box::reserve_box_header_space(writer, data64bit);
 
@@ -291,7 +289,7 @@ size_t heif::FullBox::reserve_box_header_space(StreamWriter& writer, bool data64
 }
 
 
-heif::Error heif::FullBox::write_header(StreamWriter& writer, size_t total_size, bool data64bit) const
+Error FullBox::write_header(StreamWriter& writer, size_t total_size, bool data64bit) const
 {
   auto err = Box::write_header(writer, total_size, data64bit);
   if (err) {
@@ -306,7 +304,7 @@ heif::Error heif::FullBox::write_header(StreamWriter& writer, size_t total_size,
 }
 
 
-heif::Error heif::Box::prepend_header(StreamWriter& writer, size_t box_start, bool data64bit) const
+Error Box::prepend_header(StreamWriter& writer, size_t box_start, bool data64bit) const
 {
   size_t total_size = writer.data_size() - box_start;
 
@@ -320,7 +318,7 @@ heif::Error heif::Box::prepend_header(StreamWriter& writer, size_t box_start, bo
 }
 
 
-heif::Error heif::Box::write_header(StreamWriter& writer, size_t total_size, bool data64bit) const
+Error Box::write_header(StreamWriter& writer, size_t total_size, bool data64bit) const
 {
   bool large_size = (total_size > 0xFFFFFFFF);
 
@@ -403,7 +401,7 @@ Error FullBox::parse_full_box_header(BitstreamRange& range)
 }
 
 
-Error Box::read(BitstreamRange& range, std::shared_ptr<heif::Box>* result)
+Error Box::read(BitstreamRange& range, std::shared_ptr<Box>* result)
 {
   BoxHeader hdr;
   Error err = hdr.parse_header(range);
@@ -606,7 +604,7 @@ Error Box::read(BitstreamRange& range, std::shared_ptr<heif::Box>* result)
 
   // Box size may not be larger than remaining bytes in parent box.
 
-  if (range.get_remaining_bytes() < box_size_without_header) {
+  if ((int64_t)range.get_remaining_bytes() < box_size_without_header) {
     return Error(heif_error_Invalid_input,
                  heif_suberror_Invalid_box_size);
   }
@@ -1870,7 +1868,13 @@ Error Box_colr::parse(BitstreamRange& range)
   }
   else if (colour_type == fourcc("prof") ||
            colour_type == fourcc("rICC")) {
-    auto profile_size = get_box_size() - get_header_size() - 4;
+    uint64_t profile_size_64 = get_box_size() - get_header_size() - 4;
+    if (profile_size_64 > std::numeric_limits<size_t>::max()) {
+      return Error(heif_error_Invalid_input, heif_suberror_Security_limit_exceeded, "Color profile exceeds maximum supported size");
+    }
+
+    size_t profile_size = static_cast<size_t>(profile_size_64);
+
     status = range.wait_for_available_bytes(profile_size);
     if (status != StreamReader::size_reached) {
       // TODO: return recoverable error at timeout
@@ -2271,7 +2275,7 @@ Error Box_mdcv::write(StreamWriter& writer) const
 
 Error Box_ipco::get_properties_for_item_ID(uint32_t itemID,
                                            const std::shared_ptr<class Box_ipma>& ipma,
-                                           std::vector<Property>& out_properties) const
+                                           std::vector<std::shared_ptr<Box>>& out_properties) const
 {
   const std::vector<Box_ipma::PropertyAssociation>* property_assoc = ipma->get_properties_for_item_ID(itemID);
   if (property_assoc == nullptr) {
@@ -2295,12 +2299,8 @@ Error Box_ipco::get_properties_for_item_ID(uint32_t itemID,
                    sstr.str());
     }
 
-    Property prop;
-    prop.essential = assoc.essential;
-
     if (assoc.property_index > 0) {
-      prop.property = allProperties[assoc.property_index - 1];
-      out_properties.push_back(prop);
+      out_properties.push_back(allProperties[assoc.property_index - 1]);
     }
   }
 
@@ -2331,6 +2331,23 @@ std::shared_ptr<Box> Box_ipco::get_property_for_item_ID(heif_item_id itemID,
   }
 
   return nullptr;
+}
+
+
+bool Box_ipco::is_property_essential_for_item(heif_item_id itemId,
+                                              const std::shared_ptr<const class Box>& property,
+                                              const std::shared_ptr<class Box_ipma>& ipma) const
+{
+  // find property index
+
+  for (int i=0;i<(int)m_children.size();i++) {
+    if (m_children[i] == property) {
+      return ipma->is_property_essential_for_item(itemId, i);
+    }
+  }
+
+  assert(false); // non-existing property
+  return false;
 }
 
 
@@ -2419,6 +2436,23 @@ const std::vector<Box_ipma::PropertyAssociation>* Box_ipma::get_properties_for_i
   }
 
   return nullptr;
+}
+
+
+bool Box_ipma::is_property_essential_for_item(heif_item_id itemId, int propertyIndex) const
+{
+  for (const auto& entry : m_entries) {
+    if (entry.item_ID == itemId) {
+      for (const auto& assoc : entry.associations) {
+        if (assoc.property_index == propertyIndex) {
+          return assoc.essential;
+        }
+      }
+    }
+  }
+
+  assert(false);
+  return false;
 }
 
 
@@ -3281,7 +3315,7 @@ Error Box_av1C::parse(BitstreamRange& range)
     c.initial_presentation_delay_minus_one = byte & 0x0F;
   }
 
-  const int64_t configOBUs_bytes = range.get_remaining_bytes();
+  const size_t configOBUs_bytes = range.get_remaining_bytes();
   m_config_OBUs.resize(configOBUs_bytes);
 
   if (!range.read(m_config_OBUs.data(), configOBUs_bytes)) {

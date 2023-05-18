@@ -26,25 +26,21 @@
 
 #include "catch.hpp"
 #include "libheif/heif.h"
-#include "libheif/heif_api_structs.h"
+#include "libheif/api_structs.h"
 #include <cstdint>
 #include <stdio.h>
 #include "test-config.h"
 
-struct heif_context * get_rgb_context() {
-  struct heif_context* context;
-  struct heif_error err;
-  context = heif_context_alloc();
-  err = heif_context_read_from_file(context, (tests_data_directory + "/uncompressed_rgb3.heif").c_str(), NULL);
-  REQUIRE(err.code == heif_error_Ok);
-  return context;
-}
+#define FILES "uncompressed_rgb3.heif", "uncompressed_planar_tiled.heif", "uncompressed_row.heif", \
+  "uncompressed_row_tiled.heif", "uncompressed_pix_tile_align.heif", \
+  "uncompressed_comp_tile_align.heif", "uncompressed_row_tile_align.heif"
 
-struct heif_context * get_rgb_planar_tiled_context() {
+struct heif_context * get_context_for_file(std::string filename) {
   struct heif_context* context;
   struct heif_error err;
   context = heif_context_alloc();
-  err = heif_context_read_from_file(context, (tests_data_directory + "/uncompressed_planar_tiled.heif").c_str(), NULL);
+  err = heif_context_read_from_file(context, (tests_data_directory + "/" + filename).c_str(), NULL);
+  INFO(filename);
   REQUIRE(err.code == heif_error_Ok);
   return context;
 }
@@ -81,19 +77,15 @@ void check_image_handle_size(struct heif_context *&context) {
   heif_image_handle_release(handle);
 }
 
-TEST_CASE("image_handle_size_rgb3") {
-  auto context = get_rgb_context();
+TEST_CASE("check image handle size") {
+  auto file = GENERATE(FILES);
+  auto context = get_context_for_file(file);
+  INFO("file name: " << file);
   check_image_handle_size(context);
   heif_context_free(context);
 }
 
-TEST_CASE("image_handle_size_rgb_planar_tiled") {
-  auto context = get_rgb_planar_tiled_context();
-  check_image_handle_size(context);
-  heif_context_free(context);
-}
-
-void check_image_handle_alpha(struct heif_context *&context) {
+void check_image_handle_no_alpha(struct heif_context *&context) {
   heif_image_handle *handle = get_primary_image_handle(context);
 
   int has_alpha = heif_image_handle_has_alpha_channel(handle);
@@ -102,19 +94,15 @@ void check_image_handle_alpha(struct heif_context *&context) {
   heif_image_handle_release(handle);
 }
 
-TEST_CASE("alpha_rgb3") {
-  auto context = get_rgb_context();
-  check_image_handle_alpha(context);
+TEST_CASE("check image handle no alpha channel") {
+  auto file = GENERATE(FILES);
+  auto context = get_context_for_file(file);
+  INFO("file name: " << file);
+  check_image_handle_no_alpha(context);
   heif_context_free(context);
 }
 
-TEST_CASE("alpha_rgb_planar") {
-  auto context = get_rgb_planar_tiled_context();
-  check_image_handle_alpha(context);
-  heif_context_free(context);
-}
-
-void check_image_handle_depth_images(struct heif_context *&context) {
+void check_image_handle_no_depth_images(struct heif_context *&context) {
   heif_image_handle *handle = get_primary_image_handle(context);
 
   int has_depth = heif_image_handle_has_depth_image(handle);
@@ -126,19 +114,15 @@ void check_image_handle_depth_images(struct heif_context *&context) {
   heif_image_handle_release(handle);
 }
 
-TEST_CASE("depth_rgb3") {
-  auto context = get_rgb_context();
-  check_image_handle_depth_images(context);
+TEST_CASE("check image handle no depth images") {
+  auto file = GENERATE(FILES);
+  auto context = get_context_for_file(file);
+  INFO("file name: " << file);
+  check_image_handle_no_depth_images(context);
   heif_context_free(context);
 }
 
-TEST_CASE("depth_rgb_planar") {
-  auto context = get_rgb_planar_tiled_context();
-  check_image_handle_depth_images(context);
-  heif_context_free(context);
-}
-
-void check_image_handle_thumbnails(struct heif_context *&context) {
+void check_image_handle_no_thumbnails(struct heif_context *&context) {
   heif_image_handle *handle = get_primary_image_handle(context);
 
   int numthumbs = heif_image_handle_get_number_of_thumbnails(handle);
@@ -147,19 +131,15 @@ void check_image_handle_thumbnails(struct heif_context *&context) {
   heif_image_handle_release(handle);
 }
 
-TEST_CASE("thumbnails_rgb3") {
-  auto context = get_rgb_context();
-  check_image_handle_thumbnails(context);
+TEST_CASE("check image handle no thumbnails") {
+  auto file = GENERATE(FILES);
+  auto context = get_context_for_file(file);
+  INFO("file name: " << file);
+  check_image_handle_no_thumbnails(context);
   heif_context_free(context);
 }
 
-TEST_CASE("thumbnails_rgb_planar") {
-  auto context = get_rgb_planar_tiled_context();
-  check_image_handle_thumbnails(context);
-  heif_context_free(context);
-}
-
-void check_image_handle_aux_images(struct heif_context *&context) {
+void check_image_handle_no_aux_images(struct heif_context *&context) {
   heif_image_handle *handle = get_primary_image_handle(context);
 
   int num_aux = heif_image_handle_get_number_of_auxiliary_images(handle, 0);
@@ -168,19 +148,15 @@ void check_image_handle_aux_images(struct heif_context *&context) {
   heif_image_handle_release(handle);
 }
 
-TEST_CASE("auxiliary images rgb3") {
-  auto context = get_rgb_context();
-  check_image_handle_aux_images(context);
+TEST_CASE("check image handle no auxiliary images") {
+  auto file = GENERATE(FILES);
+  auto context = get_context_for_file(file);
+  INFO("file name: " << file);
+  check_image_handle_no_aux_images(context);
   heif_context_free(context);
 }
 
-TEST_CASE("auxiliary images rgb planar") {
-  auto context = get_rgb_planar_tiled_context();
-  check_image_handle_aux_images(context);
-  heif_context_free(context);
-}
-
-void check_image_handle_metadata(struct heif_context *&context) {
+void check_image_handle_no_metadata(struct heif_context *&context) {
   heif_image_handle *handle = get_primary_image_handle(context);
 
   int num_metadata_blocks =
@@ -190,15 +166,11 @@ void check_image_handle_metadata(struct heif_context *&context) {
   heif_image_handle_release(handle);
 }
 
-TEST_CASE("metadata rgb3") {
-  auto context = get_rgb_context();
-  check_image_handle_metadata(context);
-  heif_context_free(context);
-}
-
-TEST_CASE("metadata rgb planar") {
-  auto context = get_rgb_planar_tiled_context();
-  check_image_handle_metadata(context);
+TEST_CASE("check image handle no metadata blocks") {
+  auto file = GENERATE(FILES);
+  auto context = get_context_for_file(file);
+  INFO("file name: " << file);
+  check_image_handle_no_metadata(context);
   heif_context_free(context);
 }
 
@@ -249,14 +221,10 @@ void check_image_size(struct heif_context *&context) {
   heif_image_handle_release(handle);
 }
 
-TEST_CASE("image_size rgb3") {
-  auto context = get_rgb_context();
-  check_image_size(context);
-  heif_context_free(context);
-}
-
-TEST_CASE("image_size rgb planar") {
-  auto context = get_rgb_planar_tiled_context();
+TEST_CASE("check image size") {
+  auto file = GENERATE(FILES);
+  auto context = get_context_for_file(file);
+  INFO("file name: " << file);
   check_image_size(context);
   heif_context_free(context);
 }
@@ -269,85 +237,60 @@ void check_image_content(struct heif_context *&context) {
   const uint8_t *img_plane =
       heif_image_get_plane_readonly(img, heif_channel_R, &stride);
   REQUIRE(stride == 64);
-  REQUIRE(((int)(img_plane[0])) == 255);
-  REQUIRE(((int)(img_plane[3])) == 255);
-  REQUIRE(((int)(img_plane[4])) == 0);
-  REQUIRE(((int)(img_plane[7])) == 0);
-  REQUIRE(((int)(img_plane[8])) == 0);
-  REQUIRE(((int)(img_plane[11])) == 0);
-  REQUIRE(((int)(img_plane[12])) == 255);
-  REQUIRE(((int)(img_plane[15])) == 255);
-  REQUIRE(((int)(img_plane[16])) == 0);
-  REQUIRE(((int)(img_plane[19])) == 0);
-  REQUIRE(((int)(img_plane[stride + 0])) == 255);
-  REQUIRE(((int)(img_plane[stride + 3])) == 255);
-  REQUIRE(((int)(img_plane[stride + 4])) == 0);
-  REQUIRE(((int)(img_plane[stride + 7])) == 0);
-  REQUIRE(((int)(img_plane[stride + 8])) == 0);
-  REQUIRE(((int)(img_plane[stride + 11])) == 0);
-  REQUIRE(((int)(img_plane[stride + 12])) == 255);
-  REQUIRE(((int)(img_plane[stride + 15])) == 255);
-  REQUIRE(((int)(img_plane[stride + 16])) == 0);
-  REQUIRE(((int)(img_plane[stride + 19])) == 0);
+  for (int row = 0; row < 10; row++) {
+    INFO("row: " << row);
+    REQUIRE(((int)(img_plane[stride * row + 0])) == 255);
+    REQUIRE(((int)(img_plane[stride * row + 3])) == 255);
+    REQUIRE(((int)(img_plane[stride * row + 4])) == 0);
+    REQUIRE(((int)(img_plane[stride * row + 7])) == 0);
+    REQUIRE(((int)(img_plane[stride * row + 8])) == 0);
+    REQUIRE(((int)(img_plane[stride * row + 11])) == 0);
+    REQUIRE(((int)(img_plane[stride * row + 12])) == 255);
+    REQUIRE(((int)(img_plane[stride * row + 15])) == 255);
+    REQUIRE(((int)(img_plane[stride * row + 16])) == 0);
+    REQUIRE(((int)(img_plane[stride * row + 19])) == 0);
+  }
 
   img_plane = heif_image_get_plane_readonly(img, heif_channel_G, &stride);
-  REQUIRE(stride >= 20);
-  REQUIRE(((int)(img_plane[0])) == 0);
-  REQUIRE(((int)(img_plane[3])) == 0);
-  REQUIRE(((int)(img_plane[4])) == 128);
-  REQUIRE(((int)(img_plane[7])) == 128);
-  REQUIRE(((int)(img_plane[8])) == 0);
-  REQUIRE(((int)(img_plane[11])) == 0);
-  REQUIRE(((int)(img_plane[12])) == 255);
-  REQUIRE(((int)(img_plane[15])) == 255);
-  REQUIRE(((int)(img_plane[16])) == 0);
-  REQUIRE(((int)(img_plane[19])) == 0);
-  REQUIRE(((int)(img_plane[stride + 0])) == 0);
-  REQUIRE(((int)(img_plane[stride + 3])) == 0);
-  REQUIRE(((int)(img_plane[stride + 4])) == 128);
-  REQUIRE(((int)(img_plane[stride + 7])) == 128);
-  REQUIRE(((int)(img_plane[stride + 8])) == 0);
-  REQUIRE(((int)(img_plane[stride + 11])) == 0);
-  REQUIRE(((int)(img_plane[stride + 12])) == 255);
-  REQUIRE(((int)(img_plane[stride + 15])) == 255);
-  REQUIRE(((int)(img_plane[stride + 16])) == 0);
-  REQUIRE(((int)(img_plane[stride + 19])) == 0);
+  REQUIRE(stride == 64);
+  for (int row = 0; row < 10; row++) {
+    INFO("row: " << row);
+    REQUIRE(((int)(img_plane[stride * row + 0])) == 0);
+    REQUIRE(((int)(img_plane[stride * row + 3])) == 0);
+    REQUIRE(((int)(img_plane[stride * row + 4])) == 128);
+    REQUIRE(((int)(img_plane[stride * row + 7])) == 128);
+    REQUIRE(((int)(img_plane[stride * row + 8])) == 0);
+    REQUIRE(((int)(img_plane[stride * row + 11])) == 0);
+    REQUIRE(((int)(img_plane[stride * row + 12])) == 255);
+    REQUIRE(((int)(img_plane[stride * row + 15])) == 255);
+    REQUIRE(((int)(img_plane[stride * row + 16])) == 0);
+    REQUIRE(((int)(img_plane[stride * row + 19])) == 0);
+  }
 
   img_plane = heif_image_get_plane_readonly(img, heif_channel_B, &stride);
-  REQUIRE(stride >= 20);
-  REQUIRE(((int)(img_plane[0])) == 0);
-  REQUIRE(((int)(img_plane[3])) == 0);
-  REQUIRE(((int)(img_plane[4])) == 0);
-  REQUIRE(((int)(img_plane[7])) == 0);
-  REQUIRE(((int)(img_plane[8])) == 255);
-  REQUIRE(((int)(img_plane[11])) == 255);
-  REQUIRE(((int)(img_plane[12])) == 255);
-  REQUIRE(((int)(img_plane[15])) == 255);
-  REQUIRE(((int)(img_plane[16])) == 0);
-  REQUIRE(((int)(img_plane[19])) == 0);
-  REQUIRE(((int)(img_plane[stride + 0])) == 0);
-  REQUIRE(((int)(img_plane[stride + 3])) == 0);
-  REQUIRE(((int)(img_plane[stride + 4])) == 0);
-  REQUIRE(((int)(img_plane[stride + 7])) == 0);
-  REQUIRE(((int)(img_plane[stride + 8])) == 255);
-  REQUIRE(((int)(img_plane[stride + 11])) == 255);
-  REQUIRE(((int)(img_plane[stride + 12])) == 255);
-  REQUIRE(((int)(img_plane[stride + 15])) == 255);
-  REQUIRE(((int)(img_plane[stride + 16])) == 0);
-  REQUIRE(((int)(img_plane[stride + 19])) == 0);
+  REQUIRE(stride == 64);
+  for (int row = 0; row < 10; row++) {
+    INFO("row: " << row);
+    REQUIRE(((int)(img_plane[stride * row + 0])) == 0);
+    REQUIRE(((int)(img_plane[stride * row + 3])) == 0);
+    REQUIRE(((int)(img_plane[stride * row + 4])) == 0);
+    REQUIRE(((int)(img_plane[stride * row + 7])) == 0);
+    REQUIRE(((int)(img_plane[stride * row + 8])) == 255);
+    REQUIRE(((int)(img_plane[stride * row + 11])) == 255);
+    REQUIRE(((int)(img_plane[stride * row + 12])) == 255);
+    REQUIRE(((int)(img_plane[stride * row + 15])) == 255);
+    REQUIRE(((int)(img_plane[stride * row + 16])) == 0);
+    REQUIRE(((int)(img_plane[stride * row + 19])) == 0);
+  }
 
   heif_image_release(img);
   heif_image_handle_release(handle);
 }
 
-TEST_CASE("image_content rgb3") {
-  auto context = get_rgb_context();
-  check_image_content(context);
-  heif_context_free(context);
-}
-
-TEST_CASE("image_content rgb planar") {
-  auto context = get_rgb_planar_tiled_context();
+TEST_CASE("check image content") {
+  auto file = GENERATE(FILES);
+  auto context = get_context_for_file(file);
+  INFO("file name: " << file);
   check_image_content(context);
   heif_context_free(context);
 }

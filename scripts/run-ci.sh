@@ -119,41 +119,52 @@ if [ ! -z "$WITH_HEIF_DECODER" ]; then
     fi
 fi
 
-if [ ! -z "$CMAKE" ]; then
-    echo "Preparing cmake build files ..."
-    CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=Release"
-    if [ "$CURRENT_OS" = "osx" ] ; then
-        # Make sure the homebrew installed libraries are used when building instead
-        # of the libraries provided by Apple.
-        CMAKE_OPTIONS="$CMAKE_OPTIONS -DCMAKE_FIND_FRAMEWORK=LAST"
-    fi
-    if [ "$WITH_RAV1E" = "1" ]; then
-        CMAKE_OPTIONS="$CMAKE_OPTIONS -DUSE_LOCAL_RAV1E=1"
-    fi
-    if [ "$CLANG_TIDY" = "1" ]; then
-        CMAKE_OPTIONS="$CMAKE_OPTIONS -DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
-    fi
-    if [ ! -z "$FUZZER" ]; then
-        CMAKE_OPTIONS="--preset=fuzzing"
-    fi
-    if [ ! -z "$TESTS" ]; then
-        CMAKE_OPTIONS="--preset=testing"
-    fi
-    cmake . $CMAKE_OPTIONS
+
+echo "Preparing cmake build files ..."
+
+if [ ! -z "$FUZZER" ]; then
+    CMAKE_OPTIONS="--preset=fuzzing"
 fi
+if [ ! -z "$TESTS" ]; then
+    CMAKE_OPTIONS="--preset=testing"
+fi
+if [ -z "$FUZZER" ] && [ -z "$TESTS" ]; then
+    CMAKE_OPTIONS="--preset=release -DENABLE_PLUGIN_LOADING=OFF"
+fi
+	
+if [ "$CURRENT_OS" = "osx" ] ; then
+    # Make sure the homebrew installed libraries are used when building instead
+    # of the libraries provided by Apple.
+    CMAKE_OPTIONS="$CMAKE_OPTIONS -DCMAKE_FIND_FRAMEWORK=LAST"
+fi
+if [ "$CLANG_TIDY" = "1" ]; then
+    CMAKE_OPTIONS="$CMAKE_OPTIONS -DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
+fi
+
+echo "install prefix: ${BUILD_ROOT}/dist"
+mkdir ${BUILD_ROOT}/dist
+CMAKE_OPTIONS="$CMAKE_OPTIONS -DCMAKE_INSTALL_PREFIX=${BUILD_ROOT}/dist"
+
 
 if [ ! -z "$FUZZER" ] && [ "$CURRENT_OS" = "linux" ]; then
     export ASAN_SYMBOLIZER="$BUILD_ROOT/clang/bin/llvm-symbolizer"
 fi
 
-if [ -z "$EMSCRIPTEN_VERSION" ] && [ -z "$CHECK_LICENSES" ] && [ -z "$TARBALL" ] && [ -z "$CLANG_TIDY" ] ; then
+if [ -z "$EMSCRIPTEN_VERSION" ] && [ -z "$CHECK_LICENSES" ] && [ -z "$TARBALL" ] ; then
     echo "Building libheif ..."
+    cmake . $CMAKE_OPTIONS
     make -j $(nproc)
     if [ "$CURRENT_OS" = "linux" ] && [ -z "$MINGW" ] && [ -z "$FUZZER" ] && [ ! -z "$TESTS" ] ; then
         echo "Running tests ..."
         make test
     fi
     if [ -z "$FUZZER" ] ; then
+	echo "List available encoders"
+        ${BIN_WRAPPER} ./examples/heif-enc${BIN_SUFFIX} --list-encoders
+
+	echo "List available decoders"
+        ${BIN_WRAPPER} ./examples/heif-convert${BIN_SUFFIX} --list-decoders
+
         echo "Dumping information of sample file ..."
         ${BIN_WRAPPER} ./examples/heif-info${BIN_SUFFIX} --dump-boxes examples/example.heic
         if [ ! -z "$WITH_GRAPHICS" ] && [ ! -z "$WITH_HEIF_DECODER" ]; then
@@ -216,7 +227,7 @@ if [ -z "$EMSCRIPTEN_VERSION" ] && [ -z "$CHECK_LICENSES" ] && [ -z "$TARBALL" ]
             echo "Running golang example ..."
             export GOPATH="$BUILD_ROOT/gopath"
             export PKG_CONFIG_PATH="$BUILD_ROOT/dist/lib/pkgconfig:$BUILD_ROOT/libde265/dist/lib/pkgconfig/"
-            export LD_LIBRARY_PATH="$BUILD_ROOT/dist/lib"
+            export LD_LIBRARY_PATH="$BUILD_ROOT/dist/lib:$BUILD_ROOT/libde265/dist/lib"
             mkdir -p "$GOPATH/src/github.com/strukturag"
             ln -s "$BUILD_ROOT" "$GOPATH/src/github.com/strukturag/libheif"
             go run examples/heif-test.go examples/example.heic
@@ -237,26 +248,21 @@ if [ ! -z "$EMSCRIPTEN_VERSION" ]; then
 fi
 
 if [ ! -z "$TARBALL" ]; then
-    CONFIGURE_ARGS=
-    if [ ! -z "$GO" ]; then
-        CONFIGURE_ARGS="$CONFIGURE_ARGS --prefix=$BUILD_ROOT/dist --disable-gdk-pixbuf"
-    else
-        CONFIGURE_ARGS="$CONFIGURE_ARGS --disable-go"
-    fi
-    if [ "$WITH_RAV1E" = "1" ]; then
-        CONFIGURE_ARGS="$CONFIGURE_ARGS --enable-local-rav1e"
-    fi
-
-    VERSION=$(grep AC_INIT configure.ac | sed -r 's/^[^0-9]*([0-9]+\.[0-9]+\.[0-9]+).*/\1/g')
+    VERSION=$(grep project CMakeLists.txt | sed -r 's/^[^0-9]*([0-9]+\.[0-9]+\.[0-9]+).*/\1/g')
     echo "Creating tarball for version $VERSION ..."
-    make dist
+    mkdir build
+    pushd build
+    cmake .. --preset=release
+    make package_source
+    mv libheif-$VERSION.tar.gz ..
+    popd
 
     echo "Building from tarball ..."
     tar xf libheif-$VERSION.tar*
     pushd libheif-$VERSION
-    mkdir -p ./third-party/
-    ln -s $BUILD_ROOT/third-party/rav1e ./third-party/
-    ./configure $CONFIGURE_ARGS
+    mkdir build
+    pushd build
+    cmake .. --preset=release
     make -j $(nproc)
     popd
 fi

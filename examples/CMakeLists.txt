@@ -16,6 +16,19 @@ target_link_libraries(heif-info heif)
 install(TARGETS heif-info RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES heif-info.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
 
+#************************* NGIIS *************************#
+add_executable(ngiis-encode ${getopt_sources}
+        ngiis_encode.cpp)
+target_link_libraries(ngiis-encode heif)
+install(TARGETS ngiis-encode RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(FILES ngiis-encode.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+
+add_executable(ngiis-metadata ${getopt_sources}
+        ngiis_metadata.cpp)
+target_link_libraries(ngiis-metadata heif)
+install(TARGETS ngiis-metadata RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(FILES ngiis-metadata.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+#************************* NGIIS *************************#
 
 add_executable(heif-convert ${getopt_sources}
         encoder.cc
@@ -36,11 +49,10 @@ add_executable(heif-enc ${getopt_sources}
         ../libheif/exif.cc
         benchmark.h
         benchmark.cc
-        encoder.cc)
+        encoder.cc
+        decoder_y4m.cc
+        decoder_y4m.h)
 target_link_libraries(heif-enc PRIVATE heif)
-if (LIBSHARPYUV_FOUND)
-    target_compile_definitions(heif-enc PRIVATE HAVE_LIBSHARPYUV=1)
-endif()
 
 install(TARGETS heif-enc RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES heif-enc.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
@@ -83,6 +95,7 @@ int main() {
     target_include_directories(heif-enc PRIVATE ${JPEG_INCLUDE_DIRS})
 
     target_sources(heif-convert PRIVATE encoder_jpeg.cc encoder_jpeg.h)
+    target_sources(heif-enc PRIVATE decoder.h decoder_jpeg.cc decoder_jpeg.h)
 endif ()
 
 
@@ -96,6 +109,7 @@ if (PNG_FOUND)
     target_include_directories(heif-enc PRIVATE ${PNG_INCLUDE_DIR})
 
     target_sources(heif-convert PRIVATE encoder_png.cc encoder_png.h)
+    target_sources(heif-enc PRIVATE decoder_png.cc decoder_png.h)
 endif ()
 
 
@@ -114,7 +128,3 @@ if (PNG_FOUND)
     install(TARGETS heif-thumbnailer RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
     install(FILES heif-thumbnailer.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
 endif ()
-
-if (WITH_UNCOMPRESSED_CODEC)
-    target_compile_definitions(heif-enc PRIVATE ENABLE_UNCOMPRESSED_ENCODER=1)
-endif()

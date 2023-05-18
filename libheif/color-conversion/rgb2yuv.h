@@ -41,9 +41,6 @@ public:
                      const heif_color_conversion_options& options) const override;
 };
 
-template class Op_RGB_to_YCbCr<uint8_t>;
-template class Op_RGB_to_YCbCr<uint16_t>;
-
 
 
 class Op_RRGGBBxx_HDR_to_YCbCr420 : public ColorConversionOperation
@@ -89,25 +86,5 @@ public:
                      const ColorState& target_state,
                      const heif_color_conversion_options& options) const override;
 };
-
-
-template <class Pixel>
-class Op_YCbCr444_to_YCbCr420_average : public ColorConversionOperation
-{
-public:
-  std::vector<ColorStateWithCost>
-  state_after_conversion(const ColorState& input_state,
-                         const ColorState& target_state,
-                         const heif_color_conversion_options& options) const override;
-
-  std::shared_ptr<HeifPixelImage>
-  convert_colorspace(const std::shared_ptr<const HeifPixelImage>& input,
-                     const ColorState& target_state,
-                     const heif_color_conversion_options& options) const override;
-};
-
-template class Op_YCbCr444_to_YCbCr420_average<uint8_t>;
-template class Op_YCbCr444_to_YCbCr420_average<uint16_t>;
-
 
 #endif //LIBHEIF_COLORCONVERSION_RGB2YUV_H
