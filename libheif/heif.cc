@@ -20,6 +20,7 @@
 
 #include "libheif/heif_plugin.h"
 #include "libheif/region.h"
+#include "libheif/common_utils.h"
 #include <cstdint>
 
 #if defined(HAVE_CONFIG_H)
@@ -50,7 +51,7 @@
 #include <vector>
 #include <cstring>
 
-#if (defined(__MINGW32__) || defined(__MINGW64__) || defined(_MSC_VER)) && !defined(HAVE_UNISTD_H)
+#ifdef _WIN32
 // for _write
 #include <io.h>
 #else
@@ -121,21 +122,21 @@ heif_filetype_result heif_check_filetype(const uint8_t* data, int len)
   }
 
   if (len >= 12) {
-    heif_brand brand = heif_main_brand(data, len);
+    heif_brand2 brand = heif_read_main_brand(data, len);
 
-    if (brand == heif_heic) {
+    if (brand == heif_brand2_heic) {
       return heif_filetype_yes_supported;
     }
-    else if (brand == heif_heix) {
+    else if (brand == heif_brand2_heix) {
       return heif_filetype_yes_supported;
     }
-    else if (brand == heif_avif) {
+    else if (brand == heif_brand2_avif) {
       return heif_filetype_yes_supported;
     }
-    else if (brand == heif_unknown_brand) {
-      return heif_filetype_no;
+    else if (brand == heif_brand2_mif1) {
+      return heif_filetype_maybe;
     }
-    else if (brand == heif_mif1) {
+    else if (brand == heif_brand2_mif2) {
       return heif_filetype_maybe;
     }
     else {
@@ -239,8 +240,6 @@ heif_brand2 heif_read_main_brand(const uint8_t* data, int len)
   return heif_fourcc_to_brand((char*) (data + 8));
 }
 
-
-#define fourcc_to_uint32(id) (((uint32_t)(id[0])<<24) | (id[1]<<16) | (id[2]<<8) | (id[3]))
 
 heif_brand2 heif_fourcc_to_brand(const char* fourcc)
 {
@@ -477,8 +476,8 @@ void heif_context_debug_dump_boxes_to_file(struct heif_context* ctx, int fd)
 
   std::string dump = ctx->context->debug_dump_boxes();
   // TODO(fancycode): Should we return an error if writing fails?
-#if (defined(__MINGW32__) || defined(__MINGW64__) || defined(_MSC_VER)) && !defined(HAVE_UNISTD_H)
-  auto written = _write(fd, dump.c_str(), dump.size());
+#ifdef _WIN32
+  auto written = _write(fd, dump.c_str(), static_cast<unsigned int>(dump.size()));
 #else
   auto written = write(fd, dump.c_str(), dump.size());
 #endif
@@ -1838,10 +1837,6 @@ int heif_item_get_properties_of_type(const struct heif_context* context,
     return 0;
   }
 
-  if (out_list == nullptr) {
-    return 0;
-  }
-
   int out_idx = 0;
   int property_id = 1;
 
@@ -1882,10 +1877,6 @@ int heif_item_get_transformation_properties(const struct heif_context* context,
   Error err = file->get_properties(id, properties);
   if (err) {
     // We do not pass the error, because a missing ipco should have been detected already when reading the file.
-    return 0;
-  }
-
-  if (out_list == nullptr) {
     return 0;
   }
 
@@ -1998,7 +1989,7 @@ struct heif_error heif_item_add_property_user_description(const struct heif_cont
   udes->set_description(description->description ? description->description : "");
   udes->set_tags(description->tags ? description->tags : "");
 
-  heif_property_id id = context->context->add_property(itemId, udes);
+  heif_property_id id = context->context->add_property(itemId, udes, false);
 
   if (out_propertyId) {
     *out_propertyId = id;
@@ -2217,12 +2208,16 @@ int heif_get_encoder_descriptors(enum heif_compression_format format,
                                  const struct heif_encoder_descriptor** out_encoder_descriptors,
                                  int count)
 {
-  if (out_encoder_descriptors == nullptr || count <= 0) {
+  if (out_encoder_descriptors != nullptr && count <= 0) {
     return 0;
   }
 
   std::vector<const struct heif_encoder_descriptor*> descriptors;
   descriptors = get_filtered_encoder_descriptors(format, name);
+
+  if (out_encoder_descriptors == nullptr) {
+    return static_cast<int>(descriptors.size());
+  }
 
   int i;
   for (i = 0; i < count && static_cast<size_t>(i) < descriptors.size(); i++) {
