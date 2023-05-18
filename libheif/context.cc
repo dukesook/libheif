@@ -2703,17 +2703,22 @@ Error HeifContext::encode_image_as_uncompressed(const std::shared_ptr<HeifPixelI
                                                 struct heif_encoder* encoder,
                                                 const struct heif_encoding_options& options,
                                                 enum heif_image_input_class input_class,
-                                                std::shared_ptr<Image> out_image)
+                                                std::shared_ptr<Image>& out_image)
 {
 #if WITH_UNCOMPRESSED_CODEC
   heif_item_id image_id = m_heif_file->add_new_image("unci");
   out_image = std::make_shared<Image>(this, image_id);
-
+  const std::vector<uint8_t> encoded_data;
   Error err = UncompressedImageCodec::encode_uncompressed_image(m_heif_file,
                                                                 src_image,
                                                                 encoder->encoder,
                                                                 options,
-                                                                out_image);
+                                                                out_image,
+                                                                encoded_data);
+
+
+    // m_heif_file->add_av1C_property(image_id);
+    // m_heif_file->set_av1C_configuration(image_id, config);
 
   m_top_level_images.push_back(out_image);
   m_all_images[image_id] = out_image;

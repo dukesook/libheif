@@ -53,8 +53,8 @@ public:
 
   const std::vector<Component>& get_components() const { return m_components; }
 
-protected:
-  Error parse(BitstreamRange& range) override;
+  public: //TOTO - protected:
+    Error parse(BitstreamRange& range) override;
 
   std::vector<Component> m_components;
 };
@@ -109,7 +109,7 @@ public:
 
   uint32_t get_number_of_tile_rows() { return m_num_tile_rows_minus_one + 1; }
 
-protected:
+public: //protected: //TODO - make this protected
   Error parse(BitstreamRange& range) override;
 
   uint32_t m_profile;
@@ -144,10 +144,12 @@ public:
                                          const std::vector<uint8_t>& uncompressed_data);
 
   static Error encode_uncompressed_image(const std::shared_ptr<HeifFile>& heif_file,
-                                         const std::shared_ptr<HeifPixelImage>& src_image,
-                                         void* encoder_struct,
-                                         const struct heif_encoding_options& options,
-                                         std::shared_ptr<HeifContext::Image> out_image);
+                                          const std::shared_ptr<HeifPixelImage>& src_image,
+                                          void* encoder_struct,
+                                          const struct heif_encoding_options& options,
+                                          std::shared_ptr<HeifContext::Image> out_image,
+                                          std::vector<uint8_t> encoded_data);
+
 };
 
 #endif //LIBHEIF_UNCOMPRESSED_IMAGE_H

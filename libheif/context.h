@@ -393,7 +393,7 @@ public:
                                      struct heif_encoder* encoder,
                                      const struct heif_encoding_options& options,
                                      enum heif_image_input_class input_class,
-                                     std::shared_ptr<Image> out_image);
+                                     std::shared_ptr<Image>& out_image);
 
   // write PIXI, CLLI, MDVC
   void write_image_metadata(std::shared_ptr<HeifPixelImage> src_image, int image_id);

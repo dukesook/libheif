@@ -205,7 +205,35 @@ Error Box_uncC::write(StreamWriter& writer) const
   size_t box_start = reserve_box_header_space(writer);
 
   writer.write32(m_profile);
-  // TODO: this is not complete
+  writer.write16(m_components.size());
+
+  for (int i = 0; i < m_components.size(); i++) {
+    auto comp = m_components[i];
+    writer.write16(comp.component_index);
+    writer.write8(comp.component_bit_depth_minus_one);
+    writer.write8(comp.component_format);
+    writer.write8(comp.component_align_size);
+  }
+
+  writer.write8(m_sampling_type);
+  writer.write8(m_interleave_type);
+  writer.write8(m_block_size);
+
+  uint8_t flags = 0;
+  m_components_little_endian ? flags |= 0b10000000 : flags;
+  m_block_pad_lsb            ? flags |= 0b01000000 : flags;
+  m_block_little_endian      ? flags |= 0b00100000 : flags;
+  m_block_reversed           ? flags |= 0b00010000 : flags;
+  m_pad_unknown              ? flags |= 0b00001000 : flags;
+  flags |= (0 & 0x07); //3 bits
+  writer.write8(flags);
+
+  writer.write8(m_pixel_size);
+  writer.write32(m_row_align_size);
+  writer.write32(m_tile_align_size);
+  writer.write32(m_num_tile_cols_minus_one);
+  writer.write32(m_num_tile_rows_minus_one);
+
   prepend_header(writer, box_start);
 
   return Error::Ok;
@@ -640,15 +668,102 @@ Error UncompressedImageCodec::decode_uncompressed_image(const std::shared_ptr<co
   return Error::Ok;
 }
 
+
+
 Error UncompressedImageCodec::encode_uncompressed_image(const std::shared_ptr<HeifFile>& heif_file,
                                                         const std::shared_ptr<HeifPixelImage>& src_image,
                                                         void* encoder_struct,
                                                         const struct heif_encoding_options& options,
-                                                        std::shared_ptr<HeifContext::Image> out_image)
-{
-  //encoder_struct_uncompressed* encoder = (encoder_struct_uncompressed*)encoder_struct;
+                                                        std::shared_ptr<HeifContext::Image> out_image,
+                                                        std::vector<uint8_t> encoded_data)
+  {
+    printf("UNCOMPRESSED\n");
+    // encoder_struct_uncompressed* encoder = (encoder_struct_uncompressed*)encoder_struct;
+    
+    int stride;
+    const uint8_t* data = src_image->get_plane(heif_channel_interleaved, &stride);
+    int width = src_image->get_width();
+    int height = src_image->get_height();
+    int band_count = 3;
+    int byte_count = width * height * band_count;
 
-  printf("UNCOMPRESSED\n");
+    out_image->set_resolution(width, height);
+    int image_id = 1;
+
+
+    //MDAT
+    for (int i = 0; i < byte_count; i++) {
+      encoded_data.push_back(data[i]);
+    }
+    heif_file->append_iloc_data(image_id, encoded_data);
+
+
+    //Property - ispe
+    heif_file->add_ispe_property(image_id, width, height);
+
+
+    //Property - uncC
+    auto uncC = std::make_shared<Box_uncC>();
+    uncC->m_profile = 0;
+    {
+      Box_uncC::Component r;
+      r.component_index = 0;
+      r.component_bit_depth_minus_one = 0x7;
+      r.component_format = 0;
+      r.component_align_size = 0;
+
+      Box_uncC::Component g;
+      g.component_index = 1;
+      g.component_bit_depth_minus_one = 0x7;
+      g.component_format = 0;
+      g.component_align_size = 0;
+
+      Box_uncC::Component b;
+      b.component_index = 2;
+      b.component_bit_depth_minus_one = 0x7;
+      b.component_format = 0;
+      b.component_align_size = 0;
+
+      uncC->m_components.push_back(r);
+      uncC->m_components.push_back(g);
+      uncC->m_components.push_back(b);
+    }
+
+
+    uncC->m_sampling_type = 0;
+    uncC->m_interleave_type = 1;
+    uncC->m_block_size = 0;
+    uncC->m_components_little_endian = 0;
+    uncC->m_block_pad_lsb = 0;
+    uncC->m_block_little_endian = 0;
+    uncC->m_block_reversed = 0;
+    uncC->m_pad_unknown = 0;
+    uncC->m_pixel_size = 0;
+    uncC->m_row_align_size = 0;
+    uncC->m_tile_align_size = 0;
+    uncC->m_num_tile_cols_minus_one = 0;
+    uncC->m_num_tile_rows_minus_one = 0;
+    heif_file->add_property(image_id, uncC, true);
+
+
+    //Property - cmpd
+    auto cmpd = std::make_shared<Box_cmpd>();
+    {
+      Box_cmpd::Component r, g, b;
+      r.component_type = 4;
+      g.component_type = 5;
+      b.component_type = 6;
+      cmpd->m_components.push_back(r);
+      cmpd->m_components.push_back(g);
+      cmpd->m_components.push_back(b);
+    }
+
+
+    heif_file->add_property(image_id, cmpd, true);
+
+
+
+
 
 #if 0
   Box_uncC::configuration config;
