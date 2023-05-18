@@ -109,14 +109,11 @@ public:
 
   uint32_t get_number_of_tile_rows() { return m_num_tile_rows_minus_one + 1; }
 
-protected:
+public: //protected: //TODO - make this protected
   Error parse(BitstreamRange& range) override;
 
   uint32_t m_profile;
 
-  public: //protected: //TODO - make this protected
-    Error parse(BitstreamRange& range) override;
-    
   std::vector<Component> m_components;
   uint8_t m_sampling_type;
   uint8_t m_interleave_type;

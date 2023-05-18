@@ -678,7 +678,7 @@ Error UncompressedImageCodec::encode_uncompressed_image(const std::shared_ptr<He
                                                         std::vector<uint8_t> encoded_data)
   {
     printf("UNCOMPRESSED\n");
-    encoder_struct_uncompressed* encoder = (encoder_struct_uncompressed*)encoder_struct;
+    // encoder_struct_uncompressed* encoder = (encoder_struct_uncompressed*)encoder_struct;
     
     int stride;
     const uint8_t* data = src_image->get_plane(heif_channel_interleaved, &stride);
@@ -743,7 +743,7 @@ Error UncompressedImageCodec::encode_uncompressed_image(const std::shared_ptr<He
     uncC->m_tile_align_size = 0;
     uncC->m_num_tile_cols_minus_one = 0;
     uncC->m_num_tile_rows_minus_one = 0;
-    heif_file->add_property(image_id, uncC);
+    heif_file->add_property(image_id, uncC, true);
 
 
     //Property - cmpd
@@ -759,7 +759,7 @@ Error UncompressedImageCodec::encode_uncompressed_image(const std::shared_ptr<He
     }
 
 
-    heif_file->add_property(image_id, cmpd);
+    heif_file->add_property(image_id, cmpd, true);
 
 
 
