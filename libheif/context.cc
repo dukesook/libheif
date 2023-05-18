@@ -2929,3 +2929,133 @@ heif_property_id HeifContext::add_property(heif_item_id targetItem, std::shared_
 
   return id;
 }
+
+// ============================== NGIIS ============================== //
+
+Error HeifContext::add_uri_metadata(const std::shared_ptr<Image>& master_image, const void* data, int size, const char* item_uri_type) {
+  // create an infe box describing what kind of data we are storing (this also creates a new ID)
+
+  const char* item_type = "uri "; //the space is important
+  auto metadata_infe_box = m_heif_file->add_new_infe_box(item_type);
+  metadata_infe_box->set_hidden_item(true);
+  if (item_uri_type != nullptr) {
+    metadata_infe_box->set_item_uri_type(item_uri_type);
+  }
+
+  heif_item_id metadata_id = metadata_infe_box->get_item_ID();
+
+
+  // we assign this data to the image
+
+  m_heif_file->add_iref_reference(metadata_id,
+                                  fourcc("cdsc"), {master_image->get_id()});
+
+
+  // copy the data into the file, store the pointer to it in an iloc box entry
+
+  std::vector<uint8_t> data_array;
+  data_array.resize(size);
+  memcpy(data_array.data(), data, size);
+
+  m_heif_file->append_iloc_data(metadata_id, data_array);
+
+  return Error::Ok;
+}
+
+
+// static Error fill_uncC_configuration( Box_uncC::Configuration* config, 
+//                                       const std::shared_ptr<HeifPixelImage>& image, 
+//                                       const heif_uncompressed_codec_options* options) {   
+
+//       /*Default Options*/ {
+
+//       config->profile = 0x00000000;
+//       config->component_count = 0x0003;
+
+//       config->components = new Box_uncC::Component[3];
+//       {
+//         config->components[0].component_index = 0x0;              // Red Component
+//         config->components[0].component_bit_depth_minus_one = 7; // Bit depth = 8;   Bit depth - 1 = 7;
+//         config->components[0].component_format = 0;              // unsigned int
+//         config->components[0].component_align_size = 0;          // ???
+//         config->components[1].component_index = 0x1;              // Green Component
+//         config->components[1].component_bit_depth_minus_one = 7; // Bit depth = 8;   Bit depth - 1 = 7;
+//         config->components[1].component_format = 0;              // unsigned int
+//         config->components[1].component_align_size = 0;          // ???
+//         config->components[2].component_index = 0x2;              //Blue Component
+//         config->components[2].component_bit_depth_minus_one = 7; //Bit depth = 8;   Bit depth - 1 = 7;
+//         config->components[2].component_format = 0;              // unsigned int
+//         config->components[2].component_align_size = 0;          // ???
+
+//       }
+
+
+//       config->sampling_type = 0x00;
+//       config->interleave_type = 0x01; //0 = planar, 1 = interleaved
+//       config->block_size = 0x00;
+//       config->components_little_endian = false;  // 1 bit
+//       config->block_pad_lsb = false;            // 1 bit
+//       config->block_little_endian = false;       // 1 bit
+//       config->block_reversed = false;            // 1 bit
+//       config->reserved = 0x0;              // 4 bits
+//       config->pixel_size = 0x00;
+//       config->row_align_size = 0x00000000;
+//       config->tile_align_size = 0x00000000;
+//       config->num_tile_cols_minus_one = 0x00000000;
+//       config->num_tile_rows_minus_one = 0x00000000;
+//       }
+    
+//     if (options != nullptr) {
+//       config->num_tile_cols_minus_one = options->num_tile_cols_minus_one;
+//       config->num_tile_rows_minus_one = options->num_tile_rows_minus_one;
+//     }
+
+
+//     heif_chroma chroma = image->get_chroma_format();
+//     heif_colorspace colorspace = image->get_colorspace();
+//     if (colorspace == heif_colorspace_RGB && chroma == heif_chroma_444) {
+//       //Planar (as opposed to interleaved)
+//       config->interleave_type = 0x00; //0x00 = planar.  0x01 = interleaved
+//     }
+//     return Error::Ok;
+// }
+
+Error HeifContext::encode_image_as_j2k(const std::shared_ptr<HeifPixelImage>& image,
+                                      struct heif_encoder* encoder,
+                                      const struct heif_encoding_options* options,
+                                      enum heif_image_input_class input_class,
+                                      std::shared_ptr<Image>& out_image) {
+  heif_item_id image_id = m_heif_file->add_new_image("j2k1");
+  out_image = std::make_shared<Image>(this, image_id);
+  
+
+  heif_image c_api_image;
+  std::shared_ptr<HeifPixelImage> src_image = image;
+  c_api_image.image = src_image;
+  encoder->plugin->encode_image(encoder->encoder, &c_api_image, input_class);
+
+  //MDAT & ILOC Boxes
+  uint8_t* data;
+  int size;
+  encoder->plugin->get_compressed_data(encoder->encoder, &data, &size, nullptr);
+  std::vector<uint8_t> vec;
+  vec.resize(size);
+  memcpy(vec.data(), data, size);
+  m_heif_file->append_iloc_data(image_id, vec);
+
+
+  //PROPERTY - 'ispe'
+  m_heif_file->add_ispe_property(image_id, image->get_width(), image->get_height());
+
+  //PROPERTY - 'j2kH'
+  m_heif_file->add_j2kH_property(image_id);
+
+  //PROPERTY - 'colr'
+  auto profile = std::make_shared<const color_profile_nclx>();
+  m_heif_file->set_color_profile(image_id, profile);
+
+
+  return Error::Ok;
+  
+}
+// ============================== NGIIS ============================== //

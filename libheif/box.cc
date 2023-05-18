@@ -3854,3 +3854,24 @@ void Box_cdef::set_channels(heif_chroma chroma) {
   }
 }
 
+// ============================== NGIIS ============================== //
+heif_box_infe* Box_infe::to_heif_box_infe() {
+
+  // Box_infe is hidden within the libheif library.
+  // heif_box_infe is define in heif.h and therefore 
+  // available for external programs to use
+
+  heif_box_infe* infe = new heif_box_infe();
+
+  //Item Information
+  infe->item_ID = m_item_ID;
+  infe->item_protection_index = m_item_protection_index;
+  infe->item_type = m_item_type.c_str();
+  infe->item_name = m_item_name.c_str();
+  infe->content_type = m_content_type.c_str();
+  infe->content_encoding = m_content_encoding.c_str();
+  infe->item_uri_type = m_item_uri_type.c_str();
+  infe->hidden_item = m_hidden_item;  
+
+  return infe;
+} 

@@ -3552,3 +3552,134 @@ struct heif_error heif_region_get_polyline_points_transformed(const struct heif_
   return heif_region_get_poly_points_scaled(region, pts, image_id);
 }
 
+//********************************* NGIIS GUI JUNE DEMO *********************************//
+
+heif_item_id* heif_context_get_infe_ids(heif_context* ctx, uint32_t* id_count) {
+  auto heif_file = ctx->context->get_heif_file();
+  std::vector<heif_item_id> ids_vector = heif_file->get_item_IDs();
+
+  //Convert Vector To Array - for C backwards compatibility
+  *id_count = (uint32_t) ids_vector.size();
+  heif_item_id* ids_array = new heif_item_id[*id_count];
+  std::copy(ids_vector.begin(), ids_vector.end(), ids_array);
+
+  return ids_array;
+}
+
+struct heif_box_infe* heif_context_get_infe(struct heif_context* ctx, uint32_t id) {
+
+  auto heif_file = ctx->context->get_heif_file();
+
+  std::shared_ptr<Box_infe> infe_box = heif_file->get_infe_box(id);
+
+  //Convert to C struct heif_box_infe
+  heif_box_infe* infe_struct = infe_box->to_heif_box_infe();
+
+  return infe_struct;
+}
+
+heif_image* heif_context_get_image_by_id(heif_context* ctx, uint32_t id, enum heif_colorspace colorspace, enum heif_chroma chroma, heif_decoding_options* options) {
+  //Variables
+  std::shared_ptr<HeifPixelImage> heif_pixel_image = std::make_shared<HeifPixelImage>();
+  // std::shared_ptr<HeifPixelImage>& img,
+  
+  heif_image* img = new heif_image; //The HeifPixelImage class is only visible inside the library
+  
+  //Get Desired Image
+  printf("TODO - heif.cc - What's the difference between decode_image_user() & decode_image_planar()?\n");
+  Error error = ctx->context->decode_image_user(id, heif_pixel_image, colorspace, chroma, *options);
+  // ctx->context->decode_image_planar(id, img, heif_colorspace_RGB, nullptr, false);
+  if (error) {
+    return nullptr;
+  }
+
+  //Convert HeifPixelImage to heif_image*
+  img->image = heif_pixel_image;
+  
+  return img;
+}
+
+//iref box
+struct heif_error heif_context_get_all_references_for_id(heif_context* ctx, uint32_t id, iref_box_reference** iref_out) {
+
+
+  //Get References
+  auto iref = ctx->context->get_heif_file()->get_iref_box();
+  if (iref == nullptr) {
+    (*iref_out) = nullptr;
+    return error_Ok;
+  }
+  auto references = iref->get_references_from(id);
+  size_t ref_count = references.size();
+
+  //If Not References  
+  if (ref_count == 0) {
+    *iref_out = nullptr;
+    return error_Ok;
+  }
+
+  //Allocate Memory
+  *iref_out = (iref_box_reference*) malloc( sizeof(iref_box_reference) * ref_count );
+
+  //For each Reference
+  for (size_t i = 0; i < ref_count; i++) {
+    auto ref = references.at(i);
+    uint32_t to_ids_count = (uint32_t) ref.to_item_ID.size();
+
+    //Copy libheif class to ngiis struct
+    (*iref_out)[i].referenceType = ref.header.get_type_string().c_str();
+    (*iref_out)[i].from_item_ID = ref.from_item_ID;
+    (*iref_out)[i].to_item_ID_count = to_ids_count;
+
+    //Convert C++ Vector to C Array 
+    (*iref_out)[i].to_item_IDs= (heif_item_id*)malloc(sizeof(heif_item_id) * to_ids_count);
+    for (size_t j = 0; j < to_ids_count; j++) {
+      (*iref_out)[i].to_item_IDs[j] = ref.to_item_ID.at(j);
+    }
+
+  }
+
+
+  return error_Ok;
+}
+
+
+//URI ITEMS
+struct heif_error heif_context_add_uri_metadata(struct heif_context* ctx,
+                                                const struct heif_image_handle* image_handle,
+                                                const void* data, int size,
+                                                const char* item_uri_type)  {
+  Error error = ctx->context->add_uri_metadata(image_handle->image, data, size, item_uri_type);
+  if (error != Error::Ok) {
+    return error.error_struct(ctx->context.get());
+  }
+  else {
+    return error_Ok;
+  }
+  return error_Ok;
+}
+
+const char* heif_image_handle_get_metadata_uri_type(const struct heif_image_handle* handle, heif_item_id metadata_id)  {
+// infe items of type "uri " contain customized metadata
+// The uri_type is a 16-byte key that indicates how to parse the raw out_data
+// A list of some registered uri keys can be found here: https://registry.smpte-ra.org/view/published/groups_view.html
+
+  for (auto& metadata : handle->image->get_metadata()) {
+    if (metadata->item_id == metadata_id) {
+      std::string key = metadata->item_uri_type;
+      size_t size = key.size();
+
+      // Make a deep copy so that the value is preserved even when 
+      // parent objects go out of scope
+      char* c_key = (char*) malloc(sizeof(char) * size);
+      for (size_t i = 0; i < size; i++) {
+        c_key[i] = key[i];
+      }     
+      return c_key;
+    }
+  }
+
+  return nullptr;
+}
+
+//********************************* NGIIS GUI JUNE DEMO *********************************//

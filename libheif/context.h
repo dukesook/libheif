@@ -54,6 +54,9 @@ public:
   std::string item_type;  // e.g. "Exif"
   std::string content_type;
   std::vector<uint8_t> m_data;
+  // ============================== NGIIS ============================== //
+    std::string item_uri_type; //16-byte key indicating how to parse the data when item_type is "uri "
+// ============================== NGIIS ============================== //
 };
 
 
@@ -443,6 +446,22 @@ public:
   }
 
   void write(StreamWriter& writer);
+
+// ============================== NGIIS ============================== //
+    Error add_uri_metadata(const std::shared_ptr<Image>& master_image, const void* data, int size, const char* item_uri_type);
+
+    Error encode_image_as_uncompressed(const std::shared_ptr<HeifPixelImage>& image,
+                                       struct heif_encoder* encoder,
+                                       const struct heif_encoding_options* options,
+                                       enum heif_image_input_class input_class,
+                                       std::shared_ptr<Image>& out_image);
+
+    Error encode_image_as_j2k(const std::shared_ptr<HeifPixelImage>& image,
+                              struct heif_encoder* encoder,
+                              const struct heif_encoding_options* options,
+                              enum heif_image_input_class input_class,
+                              std::shared_ptr<Image>& out_image);
+// ============================== NGIIS ============================== //
 
 private:
   std::map<heif_item_id, std::shared_ptr<Image>> m_all_images;

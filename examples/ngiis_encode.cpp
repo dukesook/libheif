@@ -31,6 +31,7 @@ static void heif_to_heif(string input_filename, string output_filename, heif_com
   he (heif_decode_image(handle, &img, heif_colorspace_RGB, heif_chroma_interleaved_RGB, nullptr) ); // decode the image and convert colorspace to RGB, saved as 24bit interleaved
 
 
+
   //GET ENCODER
   heif_context* ctx2 = heif_context_alloc(); //You need a separate context
   heif_encoder* encoder;

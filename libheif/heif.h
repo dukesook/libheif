@@ -1248,6 +1248,89 @@ struct heif_decoding_options
   struct heif_color_conversion_options color_conversion_options;
 };
 
+//********************************* NGIIS GUI JUNE DEMO *********************************//
+struct heif_box_infe  {
+  uint32_t item_ID;               // Unique Identifier, starting with 1 (0 is an invalid id)
+  uint16_t item_protection_index; // ????
+  const char* item_type;              // Can be: hvc1, grid, exif, mime, uri , etc
+  const char* item_name;              // "The item_name shall be a valid URL (e.g. a simple name, or pathname) and shall not be an absolute URL"
+  const char* content_type;           // e.g: application/rdf+xml for mime
+  const char* content_encoding;       // Optional
+  const char* item_uri_type;          // 16 Byte Key identifying the significane of the data: e.g urn:misb:KLV:ul:060E2B34020501010E01050300000000
+  int hidden_item;           // if set, this item should not be part of the presentation (i.e. hidden)
+};
+
+/* aligned(8) class ItemInfoEntry
+   extends FullBox('infe', version, 0) {
+    if ((version == 0) || (version == 1)) {
+      unsigned int(16) item_ID;
+      unsigned int(16) item_protection_index;
+      utf8string item_name;
+      utf8string content_type;
+      utf8string content_encoding; //optional
+    }
+    if (version == 1) {
+      unsigned int(32) extension_type; //optional
+      ItemInfoExtension(extension_type); //optional
+    }
+    if (version >= 2) {
+      if (version == 2) {
+        unsigned int(16) item_ID;
+      } else if (version == 3) {
+        unsigned int(32) item_ID;
+      }
+        unsigned int(16) item_protection_index;
+        unsigned int(32) item_type;
+        utf8string item_name;
+        if (item_type=='mime') {
+          utf8string content_type;
+          utf8string content_encoding; //optional
+        } else if (item_type == 'uri ') {
+          utf8string item_uri_type;
+        }
+    }
+} */
+
+//infe
+LIBHEIF_API
+heif_item_id* heif_context_get_infe_ids(struct heif_context* ctx, uint32_t* id_count);
+LIBHEIF_API
+struct heif_box_infe* heif_context_get_infe(struct heif_context* ctx, uint32_t id);
+
+//heif_image
+LIBHEIF_API
+struct heif_image* heif_context_get_image_by_id(struct heif_context* ctx, uint32_t id, enum heif_colorspace, enum heif_chroma, struct heif_decoding_options*);
+
+//iref box
+struct iref_box_reference {
+  const char* referenceType;  // 4 Character Code such as "cdsc" or "dimg"
+  heif_item_id from_item_ID;  // The ID of the infe box item.
+  uint32_t to_item_ID_count;  // The number of items in to_item_ID, aka how many items does the from_item_ID reference.
+  heif_item_id* to_item_IDs;  // List of ids that are referenced by the 'from_item_ID'.
+};
+
+// Returns all references in the 'iref' box associated with the proivded id.
+// If there are so references, then iref_out is a nullptr 
+// Remember to call free() on iref_out when it's no longer needed. 
+LIBHEIF_API
+struct heif_error heif_context_get_all_references_for_id(struct heif_context* ctx, uint32_t id, struct iref_box_reference** iref_out);
+
+//URI ITEMS
+LIBHEIF_API
+struct heif_error heif_context_add_uri_metadata(struct heif_context*,
+                                                const struct heif_image_handle* image_handle,
+                                                const void* data, int size,
+                                                const char* item_uri_type);
+LIBHEIF_API
+const char* heif_image_handle_get_metadata_uri_type(const struct heif_image_handle* handle, heif_item_id metadata_id);
+
+
+struct heif_uncompressed_codec_options {
+  uint32_t num_tile_cols_minus_one;
+  uint32_t num_tile_rows_minus_one;
+  int encode_grid_into_single_image;
+};
+//********************************* NGIIS GUI JUNE DEMO *********************************//
 
 // Allocate decoding options and fill with default values.
 // Note: you should always get the decoding options through this function since the
