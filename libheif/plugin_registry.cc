@@ -57,7 +57,7 @@
 #endif
 
 #if HAVE_OPENJPEG
-#include "libheif/plugins/heif_encoder_openjpeg.h"
+#include "libheif/plugins/encoder_openjpeg.h"
 #endif
 
 #if WITH_UNCOMPRESSED_CODEC

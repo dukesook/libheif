@@ -20,7 +20,7 @@
 
 #include "libheif/heif.h"
 #include "libheif/heif_plugin.h"
-#include "heif_encoder_openjpeg.h"
+#include "encoder_openjpeg.h"
 
 #include <openjpeg.h>
 #include <string.h>
