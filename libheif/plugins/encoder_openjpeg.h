@@ -18,8 +18,9 @@
  * along with libheif.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HEIF_ENCODER_OPENJPEG
-#define HEIF_ENCODER_OPENJPEG
+#ifndef LIBHEIF_ENCODER_OPENJPEG_H
+#define LIBHEIF_ENCODER_OPENJPEG_H
+
 
 const struct heif_encoder_plugin* get_encoder_plugin_openjpeg();
 
