@@ -723,6 +723,8 @@ Error HeifFile::get_compressed_image_data(heif_item_id ID, std::vector<uint8_t>*
     if (!j2kH_box) {
       // Should always have an j2kH box, because we are checking this in
       // heif_context::interpret_heif_file()
+
+      //TODO - Correctly Find the j2kH box
       // return Error(heif_error_Invalid_input,
       //              heif_suberror_Unspecified);
     }
@@ -732,10 +734,6 @@ Error HeifFile::get_compressed_image_data(heif_item_id ID, std::vector<uint8_t>*
     // }
 
     error = m_iloc_box->read_data(*item, m_input_stream, m_idat_box, data);
-    printf("data size: %d = 0x%x\n", data->size(), data->size());
-    for (int i = 0; i < 0x10; i++)
-      printf("%x ", data->at(i));
-    printf("\n");
 
   }
   else if (true ||  // fallback case for all kinds of generic metadata (e.g. 'iptc')

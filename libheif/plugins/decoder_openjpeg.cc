@@ -31,7 +31,7 @@ static const int OPENJPEG_PLUGIN_PRIORITY = 100;
 
 struct openjpeg_decoder
 {
-  std::vector<uint8_t> data;
+  std::vector<uint8_t> encoded_data;
 };
 
 static const char* openjpeg_plugin_name()
@@ -97,23 +97,12 @@ struct heif_error openjpeg_push_data(void* decoder_raw, const void* frame_data, 
 
   // decoder->data.data = frame_data;
   for (size_t i = 0; i < frame_size; i++) {
-    decoder->data.push_back(frame_data_src[i]);
+    decoder->encoded_data.push_back(frame_data_src[i]);
   }
 
   struct heif_error err = {heif_error_Ok, heif_suberror_Unspecified, kSuccess};
   return err;
 }
-
-static void debug_dump_opj_image(opj_image_t image) {
-  printf("Dump opj image:\n");
-  printf("\tx0: %d\n", image.x0);
-  printf("\ty0: %d\n", image.y0);
-  printf("\tx1: %d\n", image.x1);
-  printf("\ty1: %d\n", image.y1);
-  printf("\tnumcomps: %d\n", image.numcomps);
-  printf("\tcolor_space: %d\n", image.color_space);
-}
-
 
 
 //**************************************************************************
@@ -256,31 +245,31 @@ opj_stream_t* opj_stream_create_default_memory_stream(opj_memory_stream* p_memor
 
 {
 
-	opj_stream_t* l_stream;
+	opj_stream_t* stream;
 
 
 
-	if (!(l_stream = opj_stream_default_create(p_is_read_stream))) return (NULL);
+	if (!(stream = opj_stream_default_create(p_is_read_stream))) return (NULL);
 
 	//Set how to work with the frame buffer.
 
 	if(p_is_read_stream)
 
-		opj_stream_set_read_function(l_stream, opj_memory_stream_read);
+		opj_stream_set_read_function(stream, opj_memory_stream_read);
 
 	else
 
-		opj_stream_set_write_function(l_stream, opj_memory_stream_write);
+		opj_stream_set_write_function(stream, opj_memory_stream_write);
 
-	opj_stream_set_seek_function(l_stream, opj_memory_stream_seek);
+	opj_stream_set_seek_function(stream, opj_memory_stream_seek);
 
-	opj_stream_set_skip_function(l_stream, opj_memory_stream_skip);
+	opj_stream_set_skip_function(stream, opj_memory_stream_skip);
 
-	opj_stream_set_user_data(l_stream, p_memoryStream, opj_memory_stream_do_nothing);
+	opj_stream_set_user_data(stream, p_memoryStream, opj_memory_stream_do_nothing);
 
-	opj_stream_set_user_data_length(l_stream, p_memoryStream->dataSize);
+	opj_stream_set_user_data_length(stream, p_memoryStream->dataSize);
 
-	return l_stream;
+	return stream;
 
 }
 //**************************************************************************
@@ -290,19 +279,20 @@ opj_stream_t* opj_stream_create_default_memory_stream(opj_memory_stream* p_memor
 struct heif_error openjpeg_decode_image(void* decoder_raw, struct heif_image** out_img)
 {
   struct openjpeg_decoder* decoder = (struct openjpeg_decoder*) decoder_raw;
-  std::vector<uint8_t>* encoded_data = &decoder->data;
-  OPJ_UINT8* compressed_data = encoded_data->data();
-  OPJ_BOOL opj_error, success;
+  std::vector<uint8_t>* encoded_data = &decoder->encoded_data;
 
 
-  /* default decoding parameters (core) */
+
+  OPJ_BOOL success;
   opj_dparameters_t decompression_parameters;
-  opj_set_default_decoder_parameters(&decompression_parameters);
+  opj_codec_t* l_codec;
   
-  opj_codec_t* l_codec = opj_create_decompress(OPJ_CODEC_J2K);
+  //Initialize Decoder
+  opj_set_default_decoder_parameters(&decompression_parameters); 
+  l_codec = opj_create_decompress(OPJ_CODEC_J2K);
   success = opj_setup_decoder(l_codec, &decompression_parameters);
   if (!success) {
-    struct heif_error err = {heif_error_Decoder_plugin_error, heif_suberror_Unspecified, "opj_setup_decoder"};
+    struct heif_error err = {heif_error_Decoder_plugin_error, heif_suberror_Unspecified, "opj_setup_decoder()"};
     return err;
   }
 
@@ -310,42 +300,48 @@ struct heif_error openjpeg_decode_image(void* decoder_raw, struct heif_image** o
 
 
   //Create Input Stream
-  int width = 1024;
-  int height = 1024;
-  int pixel_count = width * height;
-  int byte_count = pixel_count * 3;
-  OPJ_SIZE_T buffer_size = byte_count;
-  OPJ_BOOL is_input = true;
 
-  // opj_stream_t *l_stream = opj_stream_create(buffer_size, is_input);
+
+
   opj_memory_stream memoryStream;
-    memoryStream.pData = compressed_data;
+    memoryStream.pData = encoded_data->data();
     memoryStream.dataSize = encoded_data->size();
     memoryStream.offset = 0;
   OPJ_BOOL is_read_stream = true;
-  opj_stream_t *l_stream = opj_stream_create_default_memory_stream(&memoryStream, is_read_stream);
+  opj_stream_t *stream = opj_stream_create_default_memory_stream(&memoryStream, is_read_stream);
 
-  opj_stream_set_read_function(l_stream, opj_memory_stream_read);
-  //Read header
+
+  // Read Codestream Header
   opj_image_t* image = NULL;
-
-  /* Read the main header of the codestream and if necessary the JP2 boxes*/
-  success = opj_read_header(l_stream, l_codec, &image);
+  success = opj_read_header(stream, l_codec, &image);
   if (!success) {
     struct heif_error err = {heif_error_Decoder_plugin_error, heif_suberror_Unspecified, "opj_read_header()"};
     return err;
   }
+  else if (image->numcomps != 3) {
+    //TODO - Handle other numbers of components
+    struct heif_error err = {heif_error_Unsupported_feature, heif_suberror_Unsupported_data_version, "Number of components must be 3"};
+    return err;
+  }
+  else if ((image->color_space != OPJ_CLRSPC_UNSPECIFIED) && (image->color_space != OPJ_CLRSPC_SRGB) ) {
+    //TODO - Handle other colorpsaces
+    struct heif_error err = {heif_error_Unsupported_feature, heif_suberror_Unsupported_data_version, "Colorspace must be SRGB"};
+    return err;
+  }
+  int width = (image->x1 - image->x0);
+  int height = (image->y1 - image->y0);
+  int pixel_count = width * height;
+
 
     /* Get the decoded image */
-  success = opj_decode(l_codec, l_stream, image);
+  success = opj_decode(l_codec, stream, image);
   if (!success) {
     struct heif_error err = {heif_error_Decoder_plugin_error, heif_suberror_Unspecified, "opj_decode()"};
     return err;
   }
 
-  debug_dump_opj_image(*image);
 
-  success = opj_end_decompress(l_codec, l_stream);
+  success = opj_end_decompress(l_codec, stream);
   if (!success) {
     struct heif_error err = {heif_error_Decoder_plugin_error, heif_suberror_Unspecified, "opj_end_decompress()"};
     return err;
@@ -353,7 +349,7 @@ struct heif_error openjpeg_decode_image(void* decoder_raw, struct heif_image** o
 
   
   /* Close the byte stream */
-  opj_stream_destroy(l_stream);
+  opj_stream_destroy(stream);
 
 
   
@@ -384,7 +380,6 @@ struct heif_error openjpeg_decode_image(void* decoder_raw, struct heif_image** o
 
   for (int i = 0; i < pixel_count; i++) {
 
-      // printf("i. %d\n", i);
       r[i] = (uint8_t) opj_r.data[i];
       g[i] = (uint8_t) opj_g.data[i];
       b[i] = (uint8_t) opj_b.data[i];
