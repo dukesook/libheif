@@ -43,9 +43,10 @@
             "program": "${workspaceFolder}/out/build/develop/examples/ngiis-encode",
             "cwd":     "${workspaceFolder}/out/build/develop/examples/",
             "args": [
-                "~/Pictures/Flowers.heic",
+                // "~/Pictures/Flowers.heic",
                 "out/j2k.heif",
-                "3",  
+                "out/hevc_from_j2k.heif",
+                "1",  
             ],
             "stopAtEntry": false,
             "environment": [],
