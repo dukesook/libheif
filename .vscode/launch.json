@@ -44,11 +44,11 @@
             "cwd":     "${workspaceFolder}/out/build/develop/examples/",
             "args": [
                 "~/Pictures/Heifs/desk.heic",
-                "~/Pictures/JPEG2000/desk.hej2",
+                "~/Pictures/Multicodec/desk.heif",
                 // "~/Pictures/Flowers.heic",
                 // "/home/dukesook/Pictures/JPEG2000/flowers.hej2",
-                "3",  
-                //hevc=1  av1=2  j2k=3  unc=4
+                "5",  
+                //hevc=1  av1=2  j2k=3  unc=4 multicodec=5
             ],
             "stopAtEntry": false,
             "environment": [],
