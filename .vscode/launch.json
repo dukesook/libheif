@@ -43,13 +43,10 @@
             "program": "${workspaceFolder}/out/build/develop/examples/ngiis-encode",
             "cwd":     "${workspaceFolder}/out/build/develop/examples/",
             "args": [
+                "~/Pictures/Heifs/desk.heic",
+                "~/Pictures/JPEG2000/desk.hej2",
                 // "~/Pictures/Flowers.heic",
-                // "out/j2k.heif",
-                // "out/hevc_from_j2k.heif",
-                // "/home/dukesook/Pictures/JPEG2000/desk.hej2",
-                // "/home/dukesook/Pictures/JPEG2000/desk.hej2",
-                "/home/dukesook/Pictures/Heifs/desk.heic",
-                "out/desk_hevc.hej2",
+                // "/home/dukesook/Pictures/JPEG2000/flowers.hej2",
                 "3",  
                 //hevc=1  av1=2  j2k=3  unc=4
             ],

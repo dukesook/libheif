@@ -352,10 +352,9 @@ struct heif_error opj_encode_image(void* encoder_raw, const struct heif_image* i
   width = heif_image_get_width(image, channel);
   unsigned int height = heif_image_get_primary_height(image);
 
-
+  std::vector<uint8_t> fixed_data;
   if (width*numcomps != (unsigned int)stride) {
     //Convert the data such that the stride is exactly (width * numcomps)
-    std::vector<uint8_t> fixed_data;
     int i;
     for (unsigned int y = 0; y < height; y++) {
       for (unsigned int x = 0; x < (width * numcomps); x++) {
