@@ -44,9 +44,14 @@
             "cwd":     "${workspaceFolder}/out/build/develop/examples/",
             "args": [
                 // "~/Pictures/Flowers.heic",
-                "out/j2k.heif",
-                "out/hevc_from_j2k.heif",
-                "1",  
+                // "out/j2k.heif",
+                // "out/hevc_from_j2k.heif",
+                // "/home/dukesook/Pictures/JPEG2000/desk.hej2",
+                // "/home/dukesook/Pictures/JPEG2000/desk.hej2",
+                "/home/dukesook/Pictures/Heifs/desk.heic",
+                "out/desk_hevc.hej2",
+                "3",  
+                //hevc=1  av1=2  j2k=3  unc=4
             ],
             "stopAtEntry": false,
             "environment": [],

@@ -378,11 +378,27 @@ struct heif_error openjpeg_decode_image(void* decoder_raw, struct heif_image** o
   uint8_t* g = heif_image_get_plane(*out_img, heif_channel_G, &stride);
   uint8_t* b = heif_image_get_plane(*out_img, heif_channel_B, &stride);
 
-  for (int i = 0; i < pixel_count; i++) {
+  if (stride == width) {
+    for (int i = 0; i < pixel_count; i++) {
 
-      r[i] = (uint8_t) opj_r.data[i];
-      g[i] = (uint8_t) opj_g.data[i];
-      b[i] = (uint8_t) opj_b.data[i];
+        r[i] = (uint8_t) opj_r.data[i];
+        g[i] = (uint8_t) opj_g.data[i];
+        b[i] = (uint8_t) opj_b.data[i];
+    }
+  }
+  else {
+    printf("width %d != stride %d\n", width , stride);
+    int i = 0, i_opj = 0;
+    for (int x = 0; x < width; x++) {
+      for (int y = 0; y < height; y++) {
+        i = (stride * y) + x;
+        i_opj = (width * y) + x;
+        r[i] = (uint8_t) opj_r.data[i_opj];
+        g[i] = (uint8_t) opj_g.data[i_opj];
+        b[i] = (uint8_t) opj_b.data[i_opj];
+
+      }
+    }
   }
 
   return heif_error_ok;

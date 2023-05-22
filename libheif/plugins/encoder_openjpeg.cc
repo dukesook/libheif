@@ -349,7 +349,23 @@ struct heif_error opj_encode_image(void* encoder_raw, const struct heif_image* i
   int stride = 0; //Number of bytes per row
   const uint8_t* src_data = heif_image_get_plane_readonly(image, channel, &stride);
   unsigned int width = stride / numcomps;
+  width = heif_image_get_width(image, channel);
   unsigned int height = heif_image_get_primary_height(image);
+
+
+  if (width*numcomps != (unsigned int)stride) {
+    //Convert the data such that the stride is exactly (width * numcomps)
+    std::vector<uint8_t> fixed_data;
+    int i;
+    for (unsigned int y = 0; y < height; y++) {
+      for (unsigned int x = 0; x < (width * numcomps); x++) {
+        i = (stride * y) + x;
+        fixed_data.push_back(src_data[i]);
+      }
+    }
+    src_data = fixed_data.data();
+  }
+
   encoder->codestream.clear(); //Fixes issue when encoding multiple images and old data persists.
 
   //Encodes the image into a 'codestream' which is stored in the 'encoder' variable
