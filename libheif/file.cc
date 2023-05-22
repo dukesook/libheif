@@ -164,6 +164,12 @@ void HeifFile::set_brand(heif_compression_format format, bool miaf_compatible)
       m_ftyp_box->add_compatible_brand(fourcc("vvic"));
       break;
 
+    case heif_compression_uncompressed:
+    m_ftyp_box->set_major_brand(fourcc("mif1"));
+    m_ftyp_box->add_compatible_brand(fourcc("mif1"));
+    m_ftyp_box->add_compatible_brand(fourcc("heif"));
+
+
     default:
       break;
   }

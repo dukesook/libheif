@@ -37,9 +37,10 @@
             "program": "${workspaceFolder}/out/build/develop/examples/ngiis-encode",
             "cwd":     "${workspaceFolder}/out/build/develop/examples/",
             "args": [
-                "~/Pictures/Uncompressed/squares.heif",
+                // "~/Pictures/Uncompressed/squares.heif",
+                "~/Pictures/Flowers.heic",
                 "out/uncC_squares.heif",
-                "1",  
+                "4",  
             ],
             "stopAtEntry": false,
             "environment": [],

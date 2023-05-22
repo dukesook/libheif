@@ -677,7 +677,7 @@ Error UncompressedImageCodec::encode_uncompressed_image(const std::shared_ptr<He
                                                         std::shared_ptr<HeifContext::Image> out_image,
                                                         std::vector<uint8_t> encoded_data)
   {
-    printf("UNCOMPRESSED\n");
+    // printf("UNCOMPRESSED\n");
     // encoder_struct_uncompressed* encoder = (encoder_struct_uncompressed*)encoder_struct;
     
     int stride;
