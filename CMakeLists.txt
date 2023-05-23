@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.0)
 
-project(libheif LANGUAGES C CXX VERSION 1.16.1)
+project(libheif LANGUAGES C CXX VERSION 1.16.2)
 
 # https://cmake.org/cmake/help/v3.1/policy/CMP0054.html
 cmake_policy(VERSION 3.0...3.22)
@@ -97,6 +97,7 @@ plugin_option(SvtEnc SvtEnc "Svt-av1" "AVIF encoder" ON)
 plugin_option(RAV1E RAV1E "Rav1e" "AVIF encoder" ON)
 plugin_option(OpenJPEG_ENCODER OpenJPEG "OpenJPEG_Encoder" "JPEG2000 encoder" OFF)
 plugin_option(OpenJPEG_DECODER OpenJPEG "OpenJPEG_Decoder" "JPEG2000 decoder" OFF)
+plugin_option(JPEG_DECODER JPEG "Jpeg" "JPEG decoder" OFF)
 
 option(WITH_UNCOMPRESSED_CODEC "Support internal ISO/IEC 23001-17 uncompressed codec (experimental)" OFF)
 
