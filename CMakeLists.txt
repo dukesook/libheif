@@ -95,6 +95,7 @@ plugin_option(AOM_ENCODER AOM "aom" "AVIF encoder" OFF)
 plugin_option(AOM_DECODER AOM "aom" "AVIF decoder" OFF)
 plugin_option(SvtEnc SvtEnc "Svt-av1" "AVIF encoder" ON)
 plugin_option(RAV1E RAV1E "Rav1e" "AVIF encoder" ON)
+plugin_option(JPEG_DECODER JPEG "Jpeg" "JPEG decoder" OFF)
 
 option(ENABLE_UNCOMPRESSED "Support internal ISO/IEC 23001-17 uncompressed codec (experimental)" ON)
 
