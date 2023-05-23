@@ -68,14 +68,12 @@ static void heif_to_multicodec(string input_filename, string output_filename) {
   he (heif_context_get_encoder_for_format(ctx2, heif_compression_AV1, &av1) );
   he (heif_context_get_encoder_for_format(ctx2, heif_compression_uncompressed, &unc) );
   he (heif_context_get_encoder_for_format(ctx2, heif_compression_JPEG2000, &j2k) );
-  he (heif_context_get_encoder_for_format(ctx2, heif_compression_JPEG, &jpeg) );
 
   //ENCODE
   he (heif_context_encode_image(ctx2, img, unc,  nullptr, &handle) );
   he (heif_context_encode_image(ctx2, img, hevc, nullptr, &handle) );
   he (heif_context_encode_image(ctx2, img, av1,  nullptr, &handle) );
   he (heif_context_encode_image(ctx2, img, j2k,  nullptr, &handle) );
-  he (heif_context_encode_image(ctx2, img, jpeg,  nullptr, &handle) );
 
   //WRITE
   he (heif_context_write_to_file(ctx2, output_filename.c_str()) );
