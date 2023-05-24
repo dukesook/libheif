@@ -70,9 +70,9 @@ static void heif_to_multicodec(string input_filename, string output_filename) {
   he (heif_context_get_encoder_for_format(ctx2, heif_compression_JPEG2000, &j2k) );
 
   //ENCODE
-  he (heif_context_encode_image(ctx2, img, unc,  nullptr, &handle) );
   he (heif_context_encode_image(ctx2, img, hevc, nullptr, &handle) );
   he (heif_context_encode_image(ctx2, img, av1,  nullptr, &handle) );
+  he (heif_context_encode_image(ctx2, img, unc,  nullptr, &handle) );
   he (heif_context_encode_image(ctx2, img, j2k,  nullptr, &handle) );
 
   //WRITE
@@ -85,7 +85,7 @@ static void heif_to_multicodec(string input_filename, string output_filename) {
 //MAIN
 int main(int argc, char* argv[]) {
   cout << "***** ngiis_encode.cpp *****\n";
-  printf("1=hevc  2=av1  3=j2k  4=unc\n");
+  printf("1=hevc  2=av1  3=j2k  4=unc  5=multi\n");
   if (argc <= 2) {
     printf("ERROR - Specify input & output files\n");
     return 0;
