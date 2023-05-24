@@ -65,9 +65,9 @@
             "program": "${workspaceFolder}/out/build/develop/examples/ngiis-metadata",
             "cwd":     "${workspaceFolder}/out/build/develop/examples/",
             "args": [
-                "~/Pictures/Uncompressed/squares.heif",
-                "out/metadata.heif",
-                "1",  
+                "out/regions.heif",
+                "~/Pictures/Heifs/tatooine.heif ",
+                "3", //1=udes  2=insert_region  3=dump_region  
             ],
             "stopAtEntry": false,
             "environment": [],
