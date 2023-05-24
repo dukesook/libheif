@@ -16,7 +16,7 @@ void he (struct heif_error error) {
 
 //PRIMARY FUNCTIONS
 
-static void heif_to_heif(string input_filename, string output_filename, heif_compression_format codec) {
+static void insert_udes(string input_filename, string output_filename, heif_compression_format codec) {
 
   //GET CONTEXT
   heif_context* ctx = heif_context_alloc();
@@ -71,7 +71,7 @@ int main(int argc, char* argv[]) {
     break;
   }
   
-  heif_to_heif(input_filename, output_filename, codec);
+  insert_udes(input_filename, output_filename, codec);
 
   cout << "***** End of ngiis_encode.cpp *****\n";
   return 0;
