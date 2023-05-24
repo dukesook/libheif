@@ -16,7 +16,7 @@ void he (struct heif_error error) {
 
 //PRIMARY FUNCTIONS
 
-static void insert_udes(string input_filename, string output_filename, heif_compression_format codec) {
+static void heif_to_heif(string input_filename, string output_filename, heif_compression_format codec) {
 
   //GET CONTEXT
   heif_context* ctx = heif_context_alloc();
@@ -48,14 +48,25 @@ static void insert_udes(string input_filename, string output_filename, heif_comp
 //MAIN
 int main(int argc, char* argv[]) {
   cout << "***** ngiis_encode.cpp *****\n";
+  printf("1=hevc  2=av1  3=j2k  4=unc\n");
+  if (argc <= 2) {
+    printf("ERROR - Specify input & output files\n");
+    return 0;
+  } 
 
-  char* exe_path = argv[0];
+
+  //VARIABLES
   char* input_filename = argv[1];
   char* output_filename = argv[2];
-  int compression = atoi(argv[3]);
+  int compression = 1; //default is HEVC
+
+  if (argc == 4) {
+    compression = atoi(argv[3]);
+  }
+
+
   
   heif_compression_format codec = heif_compression_HEVC;
-
   switch(compression) {
     case 1:
       codec = heif_compression_HEVC;
@@ -71,7 +82,7 @@ int main(int argc, char* argv[]) {
     break;
   }
   
-  insert_udes(input_filename, output_filename, codec);
+  heif_to_heif(input_filename, output_filename, codec);
 
   cout << "***** End of ngiis_encode.cpp *****\n";
   return 0;
