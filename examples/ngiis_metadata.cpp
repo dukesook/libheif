@@ -93,11 +93,37 @@ static void insert_region(string input_filename, string output_filename) {
 
   int32_t x=100, y=100;
   heif_region* region;
-  he( heif_region_item_add_region_point(region_item_1, x, y, nullptr) );
+  // he( heif_region_item_add_region_point(region_item_1, x, y, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 677, 169, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 644, 217, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 702, 219, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 1180, 127, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 1287, 179, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 1258, 269, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 1288, 307, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 1018, 575, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 976, 616, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 967, 797, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 1074, 768, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 1326, 666, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 1376, 661, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 1224, 736, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 1351, 734, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 1221, 800, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 1110, 882, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 1352, 840, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 1126, 941, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 1176, 609, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 1311, 564, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 1342, 527, nullptr) );
+  // he( heif_region_item_add_region_point(region_item_1, , , nullptr) );
   
-  uint32_t width = 20;
-  uint32_t height = 20;
-  he( heif_region_item_add_region_rectangle(region_item_2, x, y, width, height, &region) );
+  uint32_t width = 70;
+  uint32_t height = 60;
+  he( heif_region_item_add_region_rectangle(region_item_2, 486, 322, width, height, nullptr) );
+  he( heif_region_item_add_region_rectangle(region_item_2, 890, 760, width, height, nullptr) );
+  he( heif_region_item_add_region_rectangle(region_item_2, 1139, 736, width, height, nullptr) );
+  he( heif_region_item_add_region_rectangle(region_item_2, 914, 96, width, height, nullptr) );
 
   uint32_t radius_x = 10;
   uint32_t radius_y = 4;

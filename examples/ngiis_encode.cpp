@@ -1,10 +1,11 @@
 #include <iostream>
 #include <libheif/heif_cxx.h>
+
 #include <string>
 using namespace std;
 
 
-//handle error
+//Heif Error - Check to see if a function was successful
 void he (struct heif_error error) {
   if (error.code) {
     printf("ERROR! - %s\n", error.message);
@@ -12,10 +13,45 @@ void he (struct heif_error error) {
   }
 }
 
-
-
 //PRIMARY FUNCTIONS
+static void get_pixel_data(const char* filename) {
+  //Create New Context
+  heif_context* ctx = heif_context_alloc();
+  
+  //Read HEIF from file
+  he (heif_context_read_from_file(ctx, filename, nullptr) );
 
+  //Get Primary Image Handle
+  heif_image_handle* handle; //The heif_image_handle acts as a wrapper around the heif_image
+  he (heif_context_get_primary_image_handle(ctx, &handle) );
+
+  //Decode Image
+  heif_image* img; //The pixel data is compressed when stored in a file.
+  heif_colorspace colorspace = heif_colorspace_RGB; //Assuming the image is RGB
+  heif_chroma chroma = heif_chroma_interleaved_RGB; //Assuming the image is Interleaved
+  he (heif_decode_image(handle, &img, colorspace, chroma, nullptr) ); 
+
+  //Get Pixel Data
+  heif_channel channel = heif_channel_interleaved; //Assuming the image is Interleaved
+  int stride; //Number of bytes in a row (not pixels)
+  uint8_t* pixel_data = heif_image_get_plane(img, channel, &stride);
+
+  //Print the first 5 pixels
+  uint8_t r, g, b;
+  int channel_count = 3;
+  for (int i = 0; i < channel_count * 5; i = i + channel_count) {
+    r = pixel_data[i + 0];  //Red
+    g = pixel_data[i + 1];  //Green
+    b = pixel_data[i + 2];  //Blue
+    printf("r=%u g=%u b=%u\n", r, g, b);
+  }
+
+  //Get Width & Height
+  int height = heif_image_get_height(img, channel);
+  int width = heif_image_get_width(img, channel);
+  printf("width: %d   height: %d\n", width, height);
+
+}
 static void heif_to_heif(string input_filename, string output_filename, heif_compression_format codec) {
 
   //GET CONTEXT
@@ -80,6 +116,8 @@ int main(int argc, char* argv[]) {
     case 4:
       codec = heif_compression_uncompressed;
     break;
+    case 5:
+      get_pixel_data(input_filename);
   }
   
   heif_to_heif(input_filename, output_filename, codec);
