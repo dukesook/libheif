@@ -2731,6 +2731,72 @@ Error HeifContext::encode_image_as_uncompressed(const std::shared_ptr<HeifPixelI
     // m_heif_file->add_av1C_property(image_id);
     // m_heif_file->set_av1C_configuration(image_id, config);
 
+    m_heif_file->append_iloc_data(image_id, encoded_data);
+
+    //Property - ispe
+    int width = src_image->get_width();
+    int height = src_image->get_height();
+    m_heif_file->add_ispe_property(image_id, width, height);
+
+    //Property - uncC
+    auto uncC = std::make_shared<Box_uncC>();
+    uncC->m_profile = 0;
+    {
+      Box_uncC::Component r;
+      r.component_index = 0;
+      r.component_bit_depth_minus_one = 0x7;
+      r.component_format = 0;
+      r.component_align_size = 0;
+
+      Box_uncC::Component g;
+      g.component_index = 1;
+      g.component_bit_depth_minus_one = 0x7;
+      g.component_format = 0;
+      g.component_align_size = 0;
+
+      Box_uncC::Component b;
+      b.component_index = 2;
+      b.component_bit_depth_minus_one = 0x7;
+      b.component_format = 0;
+      b.component_align_size = 0;
+
+      uncC->m_components.push_back(r);
+      uncC->m_components.push_back(g);
+      uncC->m_components.push_back(b);
+    }
+
+
+    uncC->m_sampling_type = 0;
+    uncC->m_interleave_type = 1;
+    uncC->m_block_size = 0;
+    uncC->m_components_little_endian = 0;
+    uncC->m_block_pad_lsb = 0;
+    uncC->m_block_little_endian = 0;
+    uncC->m_block_reversed = 0;
+    uncC->m_pad_unknown = 0;
+    uncC->m_pixel_size = 0;
+    uncC->m_row_align_size = 0;
+    uncC->m_tile_align_size = 0;
+    uncC->m_num_tile_cols_minus_one = 0;
+    uncC->m_num_tile_rows_minus_one = 0;
+    m_heif_file->add_property(image_id, uncC, true);
+
+
+    //Property - cmpd
+    auto cmpd = std::make_shared<Box_cmpd>();
+    {
+      Box_cmpd::Component r, g, b;
+      r.component_type = 4;
+      g.component_type = 5;
+      b.component_type = 6;
+      cmpd->m_components.push_back(r);
+      cmpd->m_components.push_back(g);
+      cmpd->m_components.push_back(b);
+    }
+
+
+    m_heif_file->add_property(image_id, cmpd, true);
+
   m_top_level_images.push_back(out_image);
   m_all_images[image_id] = out_image;
 #endif
