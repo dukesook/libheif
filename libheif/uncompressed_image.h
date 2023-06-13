@@ -148,7 +148,7 @@ public:
                                           void* encoder_struct,
                                           const struct heif_encoding_options& options,
                                           std::shared_ptr<HeifContext::Image> out_image,
-                                          std::vector<uint8_t> encoded_data);
+                                          std::vector<uint8_t>& encoded_data);
 
 };
 

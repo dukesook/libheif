@@ -2719,7 +2719,7 @@ Error HeifContext::encode_image_as_uncompressed(const std::shared_ptr<HeifPixelI
 #if WITH_UNCOMPRESSED_CODEC
   heif_item_id image_id = m_heif_file->add_new_image("unci");
   out_image = std::make_shared<Image>(this, image_id);
-  const std::vector<uint8_t> encoded_data;
+  std::vector<uint8_t> encoded_data;
   Error err = UncompressedImageCodec::encode_uncompressed_image(m_heif_file,
                                                                 src_image,
                                                                 encoder->encoder,
@@ -2730,7 +2730,6 @@ Error HeifContext::encode_image_as_uncompressed(const std::shared_ptr<HeifPixelI
 
     // m_heif_file->add_av1C_property(image_id);
     // m_heif_file->set_av1C_configuration(image_id, config);
-
     m_heif_file->append_iloc_data(image_id, encoded_data);
 
     //Property - ispe
