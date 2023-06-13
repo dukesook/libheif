@@ -93,6 +93,41 @@ static void insert_region(string input_filename, string output_filename) {
 
   int32_t x=100, y=100;
   heif_region* region;
+
+  //POINTS
+  he( heif_region_item_add_region_point(region_item_1, 944, 783, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 866, 1008, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 1338, 1104, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 321, 569, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 876, 688, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 1229, 704, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 1387, 1162, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 1360, 1187, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 1397, 1203, nullptr) );
+
+  he( heif_region_item_add_region_point(region_item_1, 1280, 905, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 1318, 907, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 1473, 918, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 1584, 953, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 1570, 870, nullptr) );
+  he( heif_region_item_add_region_point(region_item_1, 1632, 780, nullptr) );
+  // he( heif_region_item_add_region_point(region_item_1, , , nullptr) );
+  
+  //RECTANGELS
+  uint32_t width = 80;
+  uint32_t height = 60;
+  he( heif_region_item_add_region_rectangle(region_item_2, 11, 690, width, height, nullptr) );
+  he( heif_region_item_add_region_rectangle(region_item_2, 202, 740, width+25, height, nullptr) );
+  he( heif_region_item_add_region_rectangle(region_item_2, 85, 990, width, height, nullptr) );
+  he( heif_region_item_add_region_rectangle(region_item_2, 371, 1009, width+10, height, nullptr) );
+
+  uint32_t radius_x = 125;
+  uint32_t radius_y = 150;
+  he( heif_region_item_add_region_ellipse(region_item_3, 1919, 763, radius_x, radius_y, &region) );
+  he( heif_region_item_add_region_ellipse(region_item_3, 1878, 1055, 235, 225, &region) );
+
+  #if 0
+  // Tatooine
   // he( heif_region_item_add_region_point(region_item_1, x, y, nullptr) );
   he( heif_region_item_add_region_point(region_item_1, 677, 169, nullptr) );
   he( heif_region_item_add_region_point(region_item_1, 644, 217, nullptr) );
@@ -128,6 +163,7 @@ static void insert_region(string input_filename, string output_filename) {
   uint32_t radius_x = 10;
   uint32_t radius_y = 4;
   he( heif_region_item_add_region_ellipse(region_item_3, x, y, radius_x, radius_y, &region) );
+  #endif
 
   
   //*************************************************************************************************

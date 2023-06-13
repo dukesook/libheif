@@ -65,8 +65,10 @@
             "program": "${workspaceFolder}/out/build/develop/examples/ngiis-metadata",
             "cwd":     "${workspaceFolder}/out/build/develop/examples/",
             "args": [
-                "~/Pictures/Heifs/tatooine.heif",
-                "~/Pictures/out/tatooine_boxes.heif",
+                "~/Pictures/Heifs/hoth.heif",
+                "~/Pictures/out/hoth_boxes.heif",
+                // "~/Pictures/Heifs/tatooine.heif",
+                // "~/Pictures/out/tatooine_boxes.heif",
                 "2", //1=udes  2=insert_region  3=dump_region  
             ],
             "stopAtEntry": false,
