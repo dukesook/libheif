@@ -70,10 +70,11 @@ static void heif_to_multicodec(string input_filename, string output_filename) {
   he (heif_context_get_encoder_for_format(ctx2, heif_compression_JPEG2000, &j2k) );
 
   //ENCODE
-  he (heif_context_encode_image(ctx2, img, hevc, nullptr, &handle) );
-  he (heif_context_encode_image(ctx2, img, av1,  nullptr, &handle) );
   he (heif_context_encode_image(ctx2, img, unc,  nullptr, &handle) );
-  he (heif_context_encode_image(ctx2, img, j2k,  nullptr, &handle) );
+  he (heif_context_encode_image(ctx2, img, hevc, nullptr, &handle) );
+  // he (heif_context_encode_image(ctx2, img, av1,  nullptr, &handle) );
+  // he (heif_context_encode_image(ctx2, img, j2k,  nullptr, &handle) );
+  he (heif_context_set_primary_image(ctx2, handle));
 
   //WRITE
   he (heif_context_write_to_file(ctx2, output_filename.c_str()) );
