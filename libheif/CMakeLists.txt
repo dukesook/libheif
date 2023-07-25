@@ -35,6 +35,8 @@ set(libheif_sources
         init.cc init.h
         nclx.h
         logging.h
+        mask_image.cc
+        mask_image.h
         metadata_compression.cc
         metadata_compression.h
         common_utils.cc
@@ -59,6 +61,8 @@ set(libheif_sources
         color-conversion/alpha.h
         color-conversion/chroma_sampling.cc
         color-conversion/chroma_sampling.h
+        jpeg2000.h
+        jpeg2000.cc
         ${libheif_headers})
 
 add_library(heif ${libheif_sources})

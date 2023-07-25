@@ -21,10 +21,6 @@
 #ifndef LIBHEIF_FILE_H
 #define LIBHEIF_FILE_H
 
-#if defined(HAVE_CONFIG_H)
-#include "config.h"
-#endif
-
 #include "box.h"
 
 #include <map>
@@ -45,6 +41,7 @@ class HeifPixelImage;
 
 class HeifImage;
 
+class Box_j2kH;
 
 class HeifFile
 {
@@ -136,6 +133,9 @@ public:
 
   heif_item_id add_new_image(const char* item_type);
 
+  heif_item_id add_new_hidden_image(const char* item_type);
+
+
   std::shared_ptr<Box_infe> add_new_infe_box(const char* item_type);
 
   void add_hvcC_property(heif_item_id id);
@@ -149,6 +149,8 @@ public:
   void add_av1C_property(heif_item_id id);
 
   Error set_av1C_configuration(heif_item_id id, const Box_av1C::configuration& config);
+
+  std::shared_ptr<Box_j2kH> add_j2kH_property(heif_item_id id);
 
   void add_ispe_property(heif_item_id id, uint32_t width, uint32_t height);
 

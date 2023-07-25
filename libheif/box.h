@@ -23,11 +23,6 @@
 
 #include <cstdint>
 #include "libheif/common_utils.h"
-
-#if defined(HAVE_CONFIG_H)
-#include "config.h"
-#endif
-
 #include <cinttypes>
 #include <cstddef>
 
@@ -266,13 +261,13 @@ public:
 
   std::vector<uint32_t> list_brands() const { return m_compatible_brands; }
 
-  void set_major_brand(uint32_t major_brand) { m_major_brand = major_brand; }
+  void set_major_brand(heif_brand2 major_brand) { m_major_brand = major_brand; }
 
   void set_minor_version(uint32_t minor_version) { m_minor_version = minor_version; }
 
   void clear_compatible_brands() { m_compatible_brands.clear(); }
 
-  void add_compatible_brand(uint32_t brand);
+  void add_compatible_brand(heif_brand2 brand);
 
   Error write(StreamWriter& writer) const override;
 
@@ -282,7 +277,7 @@ protected:
 private:
   uint32_t m_major_brand = 0;
   uint32_t m_minor_version = 0;
-  std::vector<uint32_t> m_compatible_brands;
+  std::vector<heif_brand2> m_compatible_brands;
 };
 
 
@@ -869,6 +864,21 @@ public:
     uint8_t initial_presentation_delay_minus_one = 0;
 
     //unsigned int (8)[] configOBUs;
+
+    heif_chroma get_heif_chroma() const {
+      if (chroma_subsampling_x==2 && chroma_subsampling_y==2) {
+        return heif_chroma_420;
+      }
+      else if (chroma_subsampling_x==2 && chroma_subsampling_y==1) {
+        return heif_chroma_422;
+      }
+      else if (chroma_subsampling_x==1 && chroma_subsampling_y==1) {
+        return heif_chroma_444;
+      }
+      else {
+        return heif_chroma_undefined;
+      }
+    }
   };
 
 
@@ -1162,6 +1172,9 @@ public:
   Box_clli()
   {
     set_short_type(fourcc("clli"));
+
+    clli.max_content_light_level = 0;
+    clli.max_pic_average_light_level = 0;
   }
 
   heif_content_light_level clli;
@@ -1178,10 +1191,7 @@ protected:
 class Box_mdcv : public Box
 {
 public:
-  Box_mdcv()
-  {
-    set_short_type(fourcc("mdcv"));
-  }
+  Box_mdcv();
 
   heif_mastering_display_colour_volume mdcv;
 

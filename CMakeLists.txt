@@ -90,12 +90,22 @@ endmacro()
 
 plugin_option(LIBDE265 LIBDE265 "libde265" "HEIC decoder" OFF)
 plugin_option(X265 X265 "x265" "HEIC encoder" OFF)
+plugin_option(KVAZAAR kvazaar "kvazaar" "kvazaar HEVC encoder" OFF)
+if (HAVE_KVAZAAR_ENABLE_LOGGING)
+    add_definitions(-DHAVE_KVAZAAR_ENABLE_LOGGING=1)
+else()
+    add_definitions(-DHAVE_KVAZAAR_ENABLE_LOGGING=0)
+endif()
+
 plugin_option(DAV1D DAV1D "Dav1d" "AVIF decoder" OFF)
 plugin_option(AOM_ENCODER AOM "aom" "AVIF encoder" OFF)
 plugin_option(AOM_DECODER AOM "aom" "AVIF decoder" OFF)
 plugin_option(SvtEnc SvtEnc "Svt-av1" "AVIF encoder" ON)
 plugin_option(RAV1E RAV1E "Rav1e" "AVIF encoder" ON)
 plugin_option(JPEG_DECODER JPEG "Jpeg" "JPEG decoder" OFF)
+plugin_option(JPEG_ENCODER JPEG "Jpeg" "JPEG encoder" OFF)
+plugin_option(OpenJPEG_ENCODER OpenJPEG "OpenJPEG_Encoder" "JPEG2000 encoder" OFF)
+plugin_option(OpenJPEG_DECODER OpenJPEG "OpenJPEG_Decoder" "JPEG2000 decoder" OFF)
 
 option(WITH_UNCOMPRESSED_CODEC "Support internal ISO/IEC 23001-17 uncompressed codec (experimental)" OFF)
 
@@ -144,8 +154,18 @@ endif()
 if (SvtEnc_FOUND AND NOT WITH_SvtEnc_PLUGIN)
     list(APPEND REQUIRES_PRIVATE "SvtAv1Enc")
 endif()
+if ((JPEG_DECODER_FOUND AND NOT WITH_JPEG_DECODER_PLUGIN) OR (JPEG_ENCODER_FOUND AND NOT WITH_JPEG_ENCODER_PLUGIN))
+    list(APPEND REQUIRES_PRIVATE "libjpeg")
+endif()
+# TODO: JPEG
+if (OpenJPEG_FOUND AND NOT WITH_OpenJPEG_PLUGIN)
+    list(APPEND REQUIRES_PRIVATE "libopenjp2")
+endif()
 if (LIBSHARPYUV_FOUND)
     list(APPEND REQUIRES_PRIVATE "libsharpyuv")
+endif()
+if (OpenJPEG_FOUND AND NOT WITH_OpenJPEG_PLUGIN)
+    list(APPEND REQUIRES_PRIVATE "OpenJPEG")
 endif()
 list(JOIN REQUIRES_PRIVATE " " REQUIRES_PRIVATE)
 
@@ -175,18 +195,36 @@ if(WITH_EXAMPLES)
     add_subdirectory (examples)
 endif()
 
+# --- API documentation
+
+# check if Doxygen is installed
+find_package(Doxygen)
+if (DOXYGEN_FOUND)
+    # set input and output files
+    set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/libheif/Doxyfile.in)
+    set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+
+    # request to configure the file
+    configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
+    message("Doxygen build started")
+
+    # note the option ALL which allows to build the docs together with the application
+    add_custom_target( doc_doxygen ALL
+        COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Generating API documentation with Doxygen"
+        VERBATIM )
+else (DOXYGEN_FOUND)
+  message("Doxygen tool needs to be installed to generate the API documentation")
+endif (DOXYGEN_FOUND)
+
 # --- Testing
 
-# Disable testing by default because this requires building with full symbol visibility (switched off WITH_REDUCED_VISIBILITY).
-option(BUILD_TESTING "" OFF)
+option(BUILD_TESTING "" ON)
 include(CTest)
 if(BUILD_TESTING)
     # TODO: fix tests on windows.
     add_subdirectory (tests)
-endif()
-
-if (BUILD_TESTING AND WITH_REDUCED_VISIBILITY)
-    message(FATAL_ERROR "Tests can only be compiled with full symbol visibility (WITH_REDUCED_VISIBILITY=OFF)")
 endif()
 
 
@@ -244,7 +282,6 @@ set(CPACK_SOURCE_IGNORE_FILES
 /Makefile$
 /libtool$
 /libheif.pc$
-/config.h$
 stamp-h1$
 )
 include(CPack)

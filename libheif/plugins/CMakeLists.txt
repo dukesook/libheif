@@ -11,16 +11,18 @@ macro(plugin_compilation name varName optionName defineName)
                     MODULE ${${optionName}_sources} ${${optionName}_extra_plugin_sources}
                     ../heif_plugin.cc
                     )
-            set_target_properties(heif-${name}
-                    PROPERTIES
-                    VERSION ${PROJECT_VERSION}
-                    SOVERSION ${PROJECT_VERSION_MAJOR})
+            if (NOT APPLE)
+                set_target_properties(heif-${name}
+                        PROPERTIES
+                        VERSION ${PROJECT_VERSION}
+                        SOVERSION ${PROJECT_VERSION_MAJOR})
+            endif ()
             target_compile_definitions(heif-${name}
                     PUBLIC
                     LIBHEIF_EXPORTS
                     HAVE_VISIBILITY)
             target_compile_definitions(heif-${name} PRIVATE PLUGIN_${defineName}=1)
-            target_include_directories(heif-${name} PRIVATE ${PROJECT_SOURCE_DIR} ${libheif_BINARY_DIR} ${libheif_SOURCE_DIR} ${${varName}_INCLUDE_DIR})
+            target_include_directories(heif-${name} PRIVATE ${PROJECT_SOURCE_DIR} ${libheif_BINARY_DIR} ${libheif_SOURCE_DIR} ${${varName}_INCLUDE_DIR} ${${varName}_INCLUDE_DIRS})
             target_link_libraries(heif-${name} PRIVATE ${${varName}_LIBRARIES} ${${varName}_LINKDIR} heif)
 
             install(TARGETS heif-${name}
@@ -30,7 +32,7 @@ macro(plugin_compilation name varName optionName defineName)
             message("Compiling '" ${name} "' as built-in backend")
             target_sources(heif PRIVATE ${${optionName}_sources})
             target_compile_definitions(heif PRIVATE HAVE_${defineName}=1)
-            target_include_directories(heif PRIVATE ${${varName}_INCLUDE_DIR})
+            target_include_directories(heif PRIVATE ${${varName}_INCLUDE_DIR} ${${varName}_INCLUDE_DIRS})
             target_link_libraries(heif PRIVATE ${${varName}_LIBRARIES} ${${varName}_LINKDIR})
         endif ()
 
@@ -40,7 +42,6 @@ macro(plugin_compilation name varName optionName defineName)
         message("Not compiling '" ${name} "' backend")
     endif ()
 endmacro()
-
 
 set(X265_sources encoder_x265.h encoder_x265.cc)
 set(X265_extra_plugin_sources)
@@ -67,12 +68,32 @@ set(SvtEnc_extra_plugin_sources)
 plugin_compilation(svtenc SvtEnc SvtEnc SvtEnc)
 
 set(RAV1E_sources encoder_rav1e.cc encoder_rav1e.h)
-set(RAV1E_extra_plugin_sources ../box.cc ../error.cc)
+set(RAV1E_extra_plugin_sources ../error.cc)
 plugin_compilation(rav1e RAV1E RAV1E RAV1E)
 
 set(JPEG_DECODER_sources decoder_jpeg.cc decoder_jpeg.h)
 set(JPEG_DECODER_extra_plugin_sources)
 plugin_compilation(jpegdec JPEG JPEG_DECODER JPEG_DECODER)
+
+set(JPEG_ENCODER_sources encoder_jpeg.cc encoder_jpeg.h)
+set(JPEG_ENCODER_extra_plugin_sources)
+plugin_compilation(jpegenc JPEG JPEG_ENCODER JPEG_ENCODER)
+
+set(OpenJPEG_DECODER_sources decoder_openjpeg.cc decoder_openjpeg.h)
+set(OpenJPEG_DECODER_extra_plugin_sources ) 
+plugin_compilation(OpenJPEG_Decoder OPENJPEG OpenJPEG_DECODER OPENJPEG_DECODER) 
+
+set(OpenJPEG_ENCODER_sources encoder_openjpeg.cc encoder_openjpeg.h)
+set(OpenJPEG_ENCODER_extra_plugin_sources)
+plugin_compilation(OpenJPEG_Encoder OPENJPEG OpenJPEG_ENCODER OPENJPEG_ENCODER)
+
+set(KVAZAAR_sources encoder_kvazaar.cc encoder_kvazaar.h)
+set(KVAZAAR_extra_plugin_sources)
+plugin_compilation(kvazaar KVAZAAR KVAZAAR KVAZAAR)
+
+target_sources(heif PRIVATE
+               encoder_mask.h
+               encoder_mask.cc)
 
 if (WITH_UNCOMPRESSED_CODEC)
     target_sources(heif PRIVATE
