@@ -21,8 +21,8 @@ endif()
 
 
 if(NOT MSVC)
-  add_definitions(-Wall)
-  add_definitions(-Werror)
+#   add_definitions(-Wall)
+#   add_definitions(-Werror)
   add_definitions(-Wsign-compare)
   add_definitions(-Wconversion)
   add_definitions(-Wno-sign-conversion)

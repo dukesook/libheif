@@ -461,6 +461,8 @@ public:
 
   void set_content_encoding(const std::string& content_encoding) { m_content_encoding = content_encoding; }
 
+  void set_item_uri_type(const std::string& item_uri_type) { m_item_uri_type = item_uri_type; }
+
   void derive_box_version() override;
 
   Error write(StreamWriter& writer) const override;

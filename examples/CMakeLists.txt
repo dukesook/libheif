@@ -50,6 +50,13 @@ target_link_libraries(heif-enc PRIVATE heif)
 install(TARGETS heif-enc RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES heif-enc.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
 
+add_executable(ngiis-enc ${getopt_sources}
+        ngiis_enc.cc
+        ngiis_ism_xml.h)
+target_link_libraries(ngiis-enc PRIVATE heif)
+
+install(TARGETS ngiis-enc RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(FILES ngiis-enc.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
 
 add_executable(heif-test ${getopt_sources}
         heif_test.cc

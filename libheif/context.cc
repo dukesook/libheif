@@ -3319,6 +3319,67 @@ Error HeifContext::add_generic_metadata(const std::shared_ptr<Image>& master_ima
 }
 
 
+Error HeifContext::add_infe_metadata(heif_infe_item* item)
+{
+  // create an infe box describing what kind of data we are storing (this also creates a new ID)
+
+  heif_infe_item& p = *item; //alias
+
+  auto metadata_infe_box = m_heif_file->add_new_infe_box(p.item_type);
+  metadata_infe_box->set_hidden_item(true);
+  if (p.content_type != nullptr) {
+    metadata_infe_box->set_content_type(p.content_type);
+  }
+
+  heif_item_id metadata_id = metadata_infe_box->get_item_ID();
+  metadata_infe_box->set_item_name(p.item_name);
+
+  if (p.item_uri_type)
+    metadata_infe_box->set_item_uri_type(p.item_uri_type);
+
+  // we assign this data to the image
+  if (p.associated_item_id != 0)
+    m_heif_file->add_iref_reference(metadata_id, fourcc("cdsc"), {p.associated_item_id});
+
+
+  // --- metadata compression
+
+  if (p.compression == heif_metadata_compression_auto) {
+    p.compression = heif_metadata_compression_off; // currently, we don't use header compression by default
+  }
+
+  // only set metadata compression for MIME type data which has 'content_encoding' field
+  if (p.compression != heif_metadata_compression_off &&
+      strcmp(p.item_type, "mime") != 0) {
+    // TODO: error, compression not supported
+  }
+
+
+  std::vector<uint8_t> data_array;
+  if (p.compression == heif_metadata_compression_deflate) {
+#if WITH_DEFLATE_HEADER_COMPRESSION
+    data_array = deflate((const uint8_t*) p.data, p.size);
+    metadata_infe_box->set_content_encoding("deflate");
+#else
+    return Error(heif_error_Unsupported_feature,
+                 heif_suberror_Unsupported_header_compression_method);
+#endif
+  }
+  else {
+    // uncompressed data, plain copy
+
+    data_array.resize(p.size);
+    memcpy(data_array.data(), p.data, p.size);
+  }
+
+  // copy the data into the file, store the pointer to it in an iloc box entry
+
+  m_heif_file->append_iloc_data(metadata_id, data_array, p.construction_method);
+
+  return Error::Ok;
+}
+
+
 heif_property_id HeifContext::add_property(heif_item_id targetItem, std::shared_ptr<Box> property, bool essential)
 {
   heif_property_id id = m_heif_file->add_property(targetItem, property, essential);

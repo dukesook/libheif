@@ -1991,6 +1991,12 @@ struct heif_error heif_context_add_generic_metadata(struct heif_context* ctx,
                                                     const void* data, int size,
                                                     const char* item_type, const char* content_type);
 
+struct heif_infe_item;
+
+LIBHEIF_API
+struct heif_error heif_context_add_infe_metadata(struct heif_context* ctx,
+                                                 struct heif_infe_item* item);
+
 // --- heif_image allocation
 
 // Create a new image of the specified resolution and colorspace.

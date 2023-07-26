@@ -3094,6 +3094,21 @@ struct heif_error heif_context_add_generic_metadata(struct heif_context* ctx,
 }
 
 
+struct heif_error heif_context_add_infe_metadata(struct heif_context* ctx,
+                                                 heif_infe_item* item)
+{
+  Error error = ctx->context->add_infe_metadata(item);
+
+  if (error != Error::Ok) {
+    return error.error_struct(ctx->context.get());
+  }
+  else {
+    return error_Ok;
+  }
+}
+
+
+
 void heif_context_set_maximum_image_size_limit(struct heif_context* ctx, int maximum_width)
 {
   ctx->context->set_maximum_image_size_limit(maximum_width);
