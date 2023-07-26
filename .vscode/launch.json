@@ -43,8 +43,8 @@
             "program": "${workspaceFolder}/out/build/develop/examples/ngiis-encode",
             "cwd":     "${workspaceFolder}/out/build/develop/examples/",
             "args": [
-                "~/Pictures/Heifs/tatooine.heif",
-                "~/Pictures/out/tatooine_uncompressed.heif",
+                "~/Pictures/Heifs/peppers.heif",
+                "~/Pictures/out/pepers_multicodec.heif",
                 // "~/Pictures/Flowers.heic",
                 // "/home/dukesook/Pictures/JPEG2000/flowers.hej2",
                 "5", //multicodec  
