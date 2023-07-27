@@ -887,17 +887,9 @@ Error HeifFile::get_compressed_image_data(heif_item_id ID, std::vector<uint8_t>*
   return Error::Ok;
 }
 
-#include <iostream>
+
 heif_item_id HeifFile::get_unused_item_id() const
 {
-  for (auto m: m_infe_boxes) {
-    heif_item_id id = m.first;
-    std::shared_ptr<Box_infe> box = m.second;
-    Indent indent;
-    printf("box# %d\n", id);
-    // printf("%s\n", box->dump(indent));
-    std::cout << box->dump(indent) << std::endl;
-  }
   for (heif_item_id id = 1;;
        id++) {
 
