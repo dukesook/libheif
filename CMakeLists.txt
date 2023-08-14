@@ -107,7 +107,7 @@ plugin_option(JPEG_ENCODER JPEG "Jpeg" "JPEG encoder" OFF)
 plugin_option(OpenJPEG_ENCODER OpenJPEG "OpenJPEG_Encoder" "JPEG2000 encoder" OFF)
 plugin_option(OpenJPEG_DECODER OpenJPEG "OpenJPEG_Decoder" "JPEG2000 decoder" OFF)
 
-option(WITH_UNCOMPRESSED_CODEC "Support internal ISO/IEC 23001-17 uncompressed codec (experimental)" OFF)
+option(WITH_UNCOMPRESSED_CODEC "Support internal ISO/IEC 23001-17 uncompressed codec (experimental)" ON)
 
 # Libsharpyuv
 option(WITH_LIBSHARPYUV "Build libsharpyuv" ON)

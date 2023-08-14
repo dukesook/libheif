@@ -80,6 +80,46 @@ static void heif_to_heif(string input_filename, string output_filename, heif_com
   printf("Created: %s\n", output_filename.c_str());
 
 }
+static void heif_to_multicodec(string input_filename, string output_filename) {
+
+  //GET CONTEXT
+  heif_context* ctx = heif_context_alloc();
+  he (heif_context_read_from_file(ctx, input_filename.c_str(), nullptr) );
+
+  //GET HANDLE
+  heif_image_handle* handle;
+  he (heif_context_get_primary_image_handle(ctx, &handle) );
+
+  //GET IMAGE
+  heif_image* img;
+  he (heif_decode_image(handle, &img, heif_colorspace_RGB, heif_chroma_interleaved_RGB, nullptr) ); // decode the image and convert colorspace to RGB, saved as 24bit interleaved
+
+
+  //GET ENCODER
+  heif_context* ctx2 = heif_context_alloc(); //You need a separate context
+  heif_encoder* encoder;
+  he (heif_context_get_encoder_for_format(ctx2, heif_compression_HEVC, &encoder) );
+  he (heif_context_encode_image(ctx2, img, encoder, nullptr, &handle) );
+
+  he (heif_context_get_encoder_for_format(ctx2, heif_compression_JPEG, &encoder) );
+  he (heif_context_encode_image(ctx2, img, encoder, nullptr, &handle) );
+
+  he (heif_context_get_encoder_for_format(ctx2, heif_compression_AV1, &encoder) );
+  // he (heif_context_encode_image(ctx2, img, encoder, nullptr, &handle) );
+
+  // he (heif_context_get_encoder_for_format(ctx2, heif_compression_JPEG2000, &encoder) );
+  // he (heif_context_encode_image(ctx2, img, encoder, nullptr, &handle) );
+
+  he (heif_context_get_encoder_for_format(ctx2, heif_compression_uncompressed, &encoder) );
+  // he (heif_context_encode_image(ctx2, img, encoder, nullptr, &handle) );
+
+
+  //WRITE
+  he (heif_context_write_to_file(ctx2, output_filename.c_str()) );
+  printf("Created: %s\n", output_filename.c_str());
+
+}
+
 
 //MAIN
 int main(int argc, char* argv[]) {
@@ -120,7 +160,8 @@ int main(int argc, char* argv[]) {
       get_pixel_data(input_filename);
   }
   
-  heif_to_heif(input_filename, output_filename, codec);
+  heif_to_multicodec(input_filename, output_filename);
+  // heif_to_heif(input_filename, output_filename, codec);
 
   cout << "***** End of ngiis_encode.cpp *****\n";
   return 0;

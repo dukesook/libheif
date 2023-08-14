@@ -37,8 +37,8 @@
             "program": "${workspaceFolder}/out/build/develop/examples/ngiis-encode",
             "cwd":     "${workspaceFolder}/out/build/develop/examples/",
             "args": [
-                "~/Pictures/Uncompressed/squares.heif",
-                "out/uncC_squares.heif",
+                "~/Pictures/heifs/peppers.heif",
+                "out/multicodec_peppers.heif",
                 "5",  
             ],
             "stopAtEntry": false,
