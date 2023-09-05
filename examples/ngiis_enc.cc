@@ -127,6 +127,7 @@ static void insert_odni_ism_xml(heif_context* ctx) {
 static void insert_content_id(heif_context* ctx, heif_item_id id, const char* name) {
 
   //randomly generated
+  // TODO - Use a library to generate uris
   const char *content_ids[] = {
     "urn:uuid:60ae321c-1bd5-5019-8727-addf87739b39", 
     "urn:uuid:8e249873-8666-5d13-b531-5946c045a8bc", 
@@ -151,6 +152,8 @@ static void insert_content_id(heif_context* ctx, heif_item_id id, const char* na
 }
 static void insert_timestamp(heif_context* ctx, heif_item_id id) 
 {
+
+  //TODO - use mimd library
 
   uint8_t timestamp_bytes[8];
   uint64_t timestamp = get_time();
@@ -212,28 +215,6 @@ static void gimme_gimi(string input_filename, string output_filename) {
 
 
 
-
-
-  // //ITEM #2 - unci content id
-  // heif_item_id unci_id = 1; //TODO - don't hard code
-  // gimi_insert_content_id(ctx2, unci_id);
-
-  // //ITEM #3 - unci timestamp
-  // gimi_insert_timestamp(ctx2, handle);
-
-
-
-  // //ITEM #4 - ODNI ISM XML 
-  // gimi_insert_ism(ctx2, handle); 
-
-  // //ITEM #5 - ISM XML CONTENT ID
-  // heif_item_id ism_id = 1; //3; //TODO - don't hard code
-  // gimi_insert_content_id(ctx2, ism_id);
-
-
-
-
-  
   //WRITE
   he (heif_context_write_to_file(ctx2, output_filename.c_str()) );
   printf("Created: %s\n", output_filename.c_str());
