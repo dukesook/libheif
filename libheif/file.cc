@@ -178,6 +178,7 @@ void HeifFile::set_brand(heif_compression_format format, bool miaf_compatible)
       // Not clear what the correct major brand should be
       m_ftyp_box->set_major_brand(heif_brand2_mif2);
       m_ftyp_box->set_minor_version(0);
+      m_ftyp_box->add_compatible_brand(heif_brand2_mif2);
       m_ftyp_box->add_compatible_brand(heif_brand2_mif1);
       m_ftyp_box->add_compatible_brand(fourcc("geo1"));
       break;
