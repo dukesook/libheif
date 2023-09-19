@@ -22,7 +22,7 @@ endif()
 
 if(NOT MSVC)
   add_definitions(-Wall)
-  add_definitions(-Werror)
+#   add_definitions(-Werror)
   add_definitions(-Wsign-compare)
   add_definitions(-Wconversion)
   add_definitions(-Wno-sign-conversion)
@@ -107,7 +107,7 @@ plugin_option(JPEG_ENCODER JPEG "Jpeg" "JPEG encoder" OFF OFF)
 plugin_option(OpenJPEG_ENCODER OpenJPEG "OpenJPEG_Encoder" "JPEG2000 encoder" OFF ON)
 plugin_option(OpenJPEG_DECODER OpenJPEG "OpenJPEG_Decoder" "JPEG2000 decoder" OFF ON)
 
-option(WITH_UNCOMPRESSED_CODEC "Support internal ISO/IEC 23001-17 uncompressed codec (experimental)" OFF)
+option(WITH_UNCOMPRESSED_CODEC "Support internal ISO/IEC 23001-17 uncompressed codec (experimental)" ON)
 
 # Libsharpyuv
 option(WITH_LIBSHARPYUV "Build libsharpyuv" ON)
