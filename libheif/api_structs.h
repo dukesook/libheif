@@ -78,4 +78,18 @@ struct heif_region
   std::shared_ptr<RegionGeometry> region;
 };
 
+
+struct heif_infe_item 
+{
+  const void* data;
+  int size;                 //side of data
+  const char* item_type;    // mime, uri , etc
+  const char* content_type; 
+  const char* item_name;    // optional
+  const char* item_uri_type; //if item_type = "uri "
+  uint8_t construction_method; // 0 = mdat, 1 = idat
+  heif_item_id associated_item_id;  //
+  heif_metadata_compression compression;
+};
+
 #endif
