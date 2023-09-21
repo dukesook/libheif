@@ -2509,7 +2509,9 @@ Error HeifContext::encode_image_as_hevc(const std::shared_ptr<HeifPixelImage>& i
 
   // Note: 'ispe' must be before the transformation properties
   m_heif_file->add_ispe_property(image_id, encoded_width, encoded_height);
-
+  /*TESING*/ 
+  m_heif_file->add_timestamp_property(image_id);
+  /*TESTING*/
   // if image size was rounded up to even size, add a 'clap' box to crop the
   // padding border away
 

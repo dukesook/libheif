@@ -135,7 +135,6 @@ int main(int argc, char* argv[]) {
   char* input_filename = argv[1];
   char* output_filename = argv[2];
   int compression = 1; //default is HEVC
-
   if (argc == 4) {
     compression = atoi(argv[3]);
   }
@@ -160,8 +159,8 @@ int main(int argc, char* argv[]) {
       get_pixel_data(input_filename);
   }
   
-  heif_to_multicodec(input_filename, output_filename);
-  // heif_to_heif(input_filename, output_filename, codec);
+  // heif_to_multicodec(input_filename, output_filename);
+  heif_to_heif(input_filename, output_filename, codec);
 
   cout << "***** End of ngiis_encode.cpp *****\n";
   return 0;

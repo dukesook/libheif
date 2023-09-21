@@ -1428,4 +1428,57 @@ private:
   std::string m_tags;
 };
 
+/**
+ * @brief TAI Clock Info - Information about the clock that generates the timestamps
+ * @note Pairs with the taic box.
+ * @note Typically, a video will have only one taic box in the entire file
+ * and one itai box per frame. 
+ * 
+ */
+class Box_taic : public FullBox
+{
+public:
+  Box_taic()
+  {
+    set_short_type(fourcc("taic"));
+  }
+
+  std::string dump(Indent&) const override;
+
+  Error write(StreamWriter& writer) const override;
+
+protected:
+  Error parse(BitstreamRange& range) override;
+
+private:
+  uint64_t m_time_uncertainty = 0xAAAAAAAAAAAAAAAA;
+  int64_t m_correction_offset = 0x0FFFFFFFFFFFFFFF;
+  float m_clock_drift_rate = 3333.3333;
+  uint8_t m_reference_source_type = 17;
+};
+
+/**
+ * @brief TAI Timestamp Box
+ * High Precision Timestamp Property
+ * 
+ */
+class Box_itai : public FullBox 
+{
+public:
+  Box_itai()
+  {
+    set_short_type(fourcc("itai"));
+  }
+
+  std::string dump(Indent&) const override;
+
+  Error write(StreamWriter& writer) const override;
+
+protected:
+  Error parse(BitstreamRange& range) override;
+
+private:
+  uint64_t m_TAI_time_stamp = 0xC;
+  uint8_t m_status_bits = 0xFE;
+};
 #endif
