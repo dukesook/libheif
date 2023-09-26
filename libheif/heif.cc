@@ -3803,3 +3803,55 @@ struct heif_error heif_region_get_mask_image(const struct heif_region* region,
 
   return heif_error_invalid_parameter_value;
 }
+
+struct heif_error heif_property_add_itai(const struct heif_context* context,
+                                              heif_item_id itemId,
+                                              uint64_t timestamp,
+                                              uint8_t status_bits,
+                                              heif_property_id* out_propertyId)
+{
+  if (!context) {
+    return {heif_error_Usage_error, heif_suberror_Null_pointer_argument, "NULL passed"};
+  }
+
+  auto itai = std::make_shared<Box_itai>();
+  itai->set_TAI_time_stamp(timestamp);
+  itai->set_status_bits(status_bits);
+
+  bool essential = false;
+  heif_property_id id = context->context->add_property(itemId, itai, essential);
+
+  if (out_propertyId) {
+    *out_propertyId = id;
+  }
+
+  return error_Ok;
+}
+
+struct heif_error heif_property_add_taic(const struct heif_context* context,
+                                              heif_item_id itemId,
+                                              uint64_t time_uncertainty,
+                                              int64_t correction_offset,
+                                              float clock_drift_rate,
+                                              uint8_t reference_source_type,
+                                              heif_property_id* out_propertyId)
+{
+  if (!context) {
+    return {heif_error_Usage_error, heif_suberror_Null_pointer_argument, "NULL passed"};
+  }
+
+  auto taic = std::make_shared<Box_taic>();
+  taic->set_time_uncertainty(time_uncertainty);
+  taic->set_correction_offset(correction_offset);
+  taic->set_clock_drift_rate(clock_drift_rate);
+  taic->set_reference_source_type(reference_source_type);
+
+  bool essential = false;
+  heif_property_id id = context->context->add_property(itemId, taic, essential);
+
+  if (out_propertyId) {
+    *out_propertyId = id;
+  }
+
+  return error_Ok;
+}

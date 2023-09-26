@@ -119,7 +119,50 @@ static void heif_to_multicodec(string input_filename, string output_filename) {
   printf("Created: %s\n", output_filename.c_str());
 
 }
+static void heif_to_heif_add_timestamp(string input_filename, string output_filename, heif_compression_format codec) {
 
+  //GET CONTEXT
+  heif_context* ctx = heif_context_alloc();
+  he (heif_context_read_from_file(ctx, input_filename.c_str(), nullptr) );
+
+  //GET HANDLE
+  heif_image_handle* handle;
+  he (heif_context_get_primary_image_handle(ctx, &handle) );
+
+  //GET IMAGE
+  heif_image* img;
+  he (heif_decode_image(handle, &img, heif_colorspace_RGB, heif_chroma_interleaved_RGB, nullptr) ); // decode the image and convert colorspace to RGB, saved as 24bit interleaved
+
+
+  //GET ENCODER
+  heif_context* ctx2 = heif_context_alloc(); //You need a separate context
+  heif_encoder* encoder;
+  he (heif_context_get_encoder_for_format(ctx2, codec, &encoder) );
+
+  //ENCODE
+  he (heif_context_encode_image(ctx2, img, encoder, nullptr, &handle) );
+
+  // Add Clock Info
+  heif_item_id itemId = 1;
+  uint64_t time_uncertainty = 17;
+  int64_t correction_offset = -55;
+  float clock_drift_rate = -3000;
+  uint8_t reference_source_type = 88;
+  heif_property_id out_taic_id;
+  heif_property_add_taic(ctx2, itemId, time_uncertainty, correction_offset, clock_drift_rate, reference_source_type, &out_taic_id);
+
+  // Add Timestamp
+  uint64_t timestamp = 1695760257;
+  uint8_t status_bits = 0;
+  heif_property_id out_itai_id;
+  heif_property_add_itai(ctx2, itemId, timestamp, status_bits, &out_itai_id);
+
+
+  //WRITE
+  he (heif_context_write_to_file(ctx2, output_filename.c_str()) );
+  printf("Created: %s\n", output_filename.c_str());
+
+}
 
 //MAIN
 int main(int argc, char* argv[]) {
@@ -160,7 +203,9 @@ int main(int argc, char* argv[]) {
   }
   
   // heif_to_multicodec(input_filename, output_filename);
-  heif_to_heif(input_filename, output_filename, codec);
+  // heif_to_heif(input_filename, output_filename, codec);
+  heif_to_heif_add_timestamp(input_filename, output_filename, codec);
+  
 
   cout << "***** End of ngiis_encode.cpp *****\n";
   return 0;
