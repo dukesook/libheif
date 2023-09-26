@@ -1449,14 +1449,19 @@ public:
 
   Error write(StreamWriter& writer) const override;
 
+  void set_time_uncertainty(uint64_t);
+  void set_correction_offset(int64_t correction_offset);
+  void set_clock_drift_rate(float clock_drift_rate);
+  void set_reference_source_type(uint8_t reference_source_type);
+
 protected:
   Error parse(BitstreamRange& range) override;
 
 private:
-  uint64_t m_time_uncertainty = 0xAAAAAAAAAAAAAAAA;
-  int64_t m_correction_offset = 0x0FFFFFFFFFFFFFFF;
-  float m_clock_drift_rate = 3333.3333;
-  uint8_t m_reference_source_type = 17;
+  uint64_t m_time_uncertainty;
+  int64_t m_correction_offset;
+  float m_clock_drift_rate;
+  uint8_t m_reference_source_type;
 };
 
 /**
@@ -1476,11 +1481,15 @@ public:
 
   Error write(StreamWriter& writer) const override;
 
+  void set_TAI_time_stamp(uint64_t timestamp);
+
+  void set_status_bits(uint8_t status_bits);
+
 protected:
   Error parse(BitstreamRange& range) override;
 
 private:
-  uint64_t m_TAI_time_stamp = 0xC;
-  uint8_t m_status_bits = 0xFE;
+  uint64_t m_TAI_time_stamp;
+  uint8_t m_status_bits;
 };
 #endif

@@ -3835,6 +3835,7 @@ Error Box_udes::write(StreamWriter& writer) const
 }
 
 
+
 std::string Box_taic::dump(Indent& indent) const {
   std::ostringstream sstr;
   sstr << Box::dump(indent);
@@ -3849,7 +3850,14 @@ Error Box_taic::write(StreamWriter& writer) const {
   size_t box_start = reserve_box_header_space(writer);
   writer.write64(m_time_uncertainty);
   writer.write64(m_correction_offset);
-  writer.write32((uint32_t) m_clock_drift_rate); //TODO - verify float to uint32_t convesion is correct
+
+  //Use a union to convert to a uint32_t
+  union {
+    float    f;
+    uint32_t uint32;
+  } u_clock_drift_rate = { .f = m_clock_drift_rate };  
+  writer.write32(u_clock_drift_rate.uint32); //TODO - verify float to uint32_t convesion is correct
+  
   writer.write8(m_reference_source_type);
 
   prepend_header(writer, box_start);
@@ -3874,8 +3882,6 @@ Error Box_taic::parse(BitstreamRange& range) {
   return range.get_error();
 }
 
-
-
 std::string Box_itai::dump(Indent& indent) const {
   std::ostringstream sstr;
   sstr << Box::dump(indent);
@@ -3883,6 +3889,28 @@ std::string Box_itai::dump(Indent& indent) const {
   sstr << indent << "status_bits: " << m_status_bits << "\n";
   return sstr.str();
 }
+
+void Box_taic::set_time_uncertainty(uint64_t time_uncertainty)
+{
+  m_time_uncertainty = time_uncertainty;
+}
+
+void Box_taic::set_correction_offset(int64_t correction_offset)
+{
+  m_correction_offset = correction_offset;
+}
+
+void Box_taic::set_clock_drift_rate(float clock_drift_rate)
+{
+  m_clock_drift_rate = clock_drift_rate;
+}
+
+void Box_taic::set_reference_source_type(uint8_t reference_source_type)
+{
+  m_reference_source_type = reference_source_type;
+}
+
+
 
 Error Box_itai::write(StreamWriter& writer) const {
   size_t box_start = reserve_box_header_space(writer);
@@ -3902,4 +3930,14 @@ Error Box_itai::parse(BitstreamRange& range) {
 
   m_status_bits = range.read8();
   return range.get_error();
+}
+
+void Box_itai::set_TAI_time_stamp(uint64_t timestamp) 
+{
+  m_TAI_time_stamp = timestamp;
+}
+
+void Box_itai::set_status_bits(uint8_t status_bits)
+{
+  m_status_bits = status_bits;
 }

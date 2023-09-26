@@ -954,19 +954,6 @@ void HeifFile::add_ispe_property(heif_item_id id, uint32_t width, uint32_t heigh
   m_ipma_box->add_property_for_item_ID(id, Box_ipma::PropertyAssociation{false, uint16_t(index + 1)});
 }
 
-
-void HeifFile::add_timestamp_property(heif_item_id id)
-{
-  auto taic = std::make_shared<Box_taic>();
-  int index_taic = m_ipco_box->append_child_box(taic);
-  m_ipma_box->add_property_for_item_ID(id, Box_ipma::PropertyAssociation{false, uint16_t(index_taic + 1)});
-
-  auto itai = std::make_shared<Box_itai>();
-  int index_itai = m_ipco_box->append_child_box(itai);
-  m_ipma_box->add_property_for_item_ID(id, Box_ipma::PropertyAssociation{false, uint16_t(index_itai + 1)});
-
-}
-
 void HeifFile::add_clap_property(heif_item_id id, uint32_t clap_width, uint32_t clap_height,
                                  uint32_t image_width, uint32_t image_height)
 {

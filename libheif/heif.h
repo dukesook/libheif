@@ -1289,6 +1289,23 @@ void heif_item_get_property_transform_crop_borders(const struct heif_context* co
                                                    int image_width, int image_height,
                                                    int* left, int* top, int* right, int* bottom);
 
+// Adds the taic Clock Info property to the specified itemId
+LIBHEIF_API
+struct heif_error heif_property_add_taic(const struct heif_context* context,
+                                         heif_item_id itemId,
+                                         uint64_t time_uncertainty,
+                                         int64_t correction_offset,
+                                         float clock_drift_rate,
+                                         uint8_t reference_source_type,
+                                         heif_property_id* out_propertyId);
+
+// Adds the itai timestamp property to the specified itemId
+LIBHEIF_API
+struct heif_error heif_property_add_itai(const struct heif_context* context,
+                                              heif_item_id itemId,
+                                              uint64_t timestamp,
+                                              uint8_t status_bits,
+                                              heif_property_id* out_propertyId);
 
 // ========================= heif_image =========================
 
