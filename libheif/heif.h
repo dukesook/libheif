@@ -1991,7 +1991,21 @@ struct heif_error heif_context_add_generic_metadata(struct heif_context* ctx,
                                                     const void* data, int size,
                                                     const char* item_type, const char* content_type);
 
-struct heif_infe_item;
+
+struct heif_infe_item 
+{
+  const void* data;
+  int size;                 //side of data
+  const char* item_type;    // mime, uri , etc
+  const char* content_type; 
+  const char* item_name;    // optional
+  const char* item_uri_type; //if item_type = "uri "
+  uint8_t construction_method; // 0 = mdat, 1 = idat
+  heif_item_id associated_item_id;  //
+  heif_metadata_compression compression;
+};
+
+
 
 LIBHEIF_API
 struct heif_error heif_context_add_infe_metadata(struct heif_context* ctx,
