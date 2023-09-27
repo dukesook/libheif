@@ -3108,6 +3108,36 @@ struct heif_error heif_context_add_infe_metadata(struct heif_context* ctx,
 }
 
 
+struct heif_error heif_context_get_items(heif_context* ctx, 
+                                         heif_infe_item** items,
+                                         size_t* count) 
+{
+
+  auto file = ctx->context->get_heif_file();
+  int infe_count = file->get_num_images();
+  std::vector<heif_item_id> ids = file->get_item_IDs();
+
+  for (size_t i = 0; i < ids.size(); i++) {
+    heif_item_id id = ids.at(i);
+    auto infe = file->get_infe_box(id);
+
+    items[i]->id = infe->get_item_ID();
+    items[i]->data;
+    items[i]->size;
+    items[i]->item_type = infe->get_item_type().c_str();
+    items[i]->content_type = infe->get_content_type().c_str();
+    items[i]->item_name = infe->get_item_name().c_str();
+    items[i]->item_uri_type = infe->get_item_uri_type().c_str();
+    items[i]->construction_method;
+    items[i]->associated_item_id;
+    items[i]->compression;
+  }
+
+
+
+  return error_Ok;
+}
+
 
 void heif_context_set_maximum_image_size_limit(struct heif_context* ctx, int maximum_width)
 {

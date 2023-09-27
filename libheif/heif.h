@@ -1994,22 +1994,27 @@ struct heif_error heif_context_add_generic_metadata(struct heif_context* ctx,
 
 struct heif_infe_item 
 {
-  const void* data;
-  int size;                 //side of data
-  const char* item_type;    // mime, uri , etc
-  const char* content_type; 
-  const char* item_name;    // optional
-  const char* item_uri_type; //if item_type = "uri "
-  uint8_t construction_method; // 0 = mdat, 1 = idat
-  heif_item_id associated_item_id;  //
+  heif_item_id id;                    // 
+  const void* data;                   // Could point to encoded pixel data
+  int size;                           // size of data in bytes
+  const char* item_type;              // hvc1, grid, mime, uri, etc
+  const char* content_type;           //
+  const char* item_name;              // optional
+  const char* item_uri_type;          // if item_type = "uri "
+  uint8_t construction_method;        // 0 = mdat, 1 = idat
+  heif_item_id associated_item_id;    // TODO - Provide the option to have multiple associated_item_id's instead of just one
   heif_metadata_compression compression;
 };
 
-
-
+// heif_infe_item->id is ignored
 LIBHEIF_API
 struct heif_error heif_context_add_infe_metadata(struct heif_context* ctx,
                                                  struct heif_infe_item* item);
+
+LIBHEIF_API
+struct heif_error heif_context_get_items(struct heif_context* ctx, 
+                                         struct heif_infe_item** items,
+                                         size_t* count);
 
 // --- heif_image allocation
 
