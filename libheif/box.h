@@ -451,7 +451,7 @@ public:
 
   void set_item_type(const std::string& type) { m_item_type = type; }
 
-  std::string get_item_name() { return m_item_name; }
+  const std::string& get_item_name() const { return m_item_name; }
   
   void set_item_name(const std::string& name) { m_item_name = name; }
 
@@ -463,7 +463,7 @@ public:
 
   void set_content_encoding(const std::string& content_encoding) { m_content_encoding = content_encoding; }
 
-  std::string get_item_uri_type() { return m_item_uri_type; }
+  const std::string& get_item_uri_type() const { return m_item_uri_type; }
   
   void set_item_uri_type(const std::string& item_uri_type) { m_item_uri_type = item_uri_type; }
 

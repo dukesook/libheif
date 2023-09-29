@@ -512,6 +512,7 @@ static bool item_type_is_image(const std::string& item_type, const std::string& 
           item_type == "vvc1" ||
           item_type == "jpeg" ||
           (item_type == "mime" && content_type == "image/jpeg") ||
+          (item_type == "mime" && content_type == "application/dni-arh+xml") ||
           item_type == "j2k1" ||
           item_type == "mski");
 }
@@ -549,6 +550,17 @@ Error HeifContext::interpret_heif_file()
       continue;
     }
 
+    /* NGIIS 9/28/2023
+    I want to reference a uri item to a mime item. 
+    However, the error: heif_suberror_Nonexisting_item_referenced
+    is thrown because mime items are not considered true by the
+    item_type_is_image(). 
+
+    Potential Solutions:
+      1) Add all infe items to m_all_images. - No, because images are required to have certain properties tied to them
+      2) Make the mime xml type an image - this is a bad short solution because mime xml items are not really images
+
+    */ // NGIIS 
     if (item_type_is_image(infe_box->get_item_type(), infe_box->get_content_type())) {
       auto image = std::make_shared<Image>(this, id);
       m_all_images.insert(std::make_pair(id, image));

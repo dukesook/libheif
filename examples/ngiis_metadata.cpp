@@ -242,6 +242,30 @@ static void dump_regions(string input_filename) {
 }
 
 
+static void dump_items(string input_filename) {
+
+  //GET CONTEXT
+  heif_context* ctx = heif_context_alloc();
+  he (heif_context_read_from_file(ctx, input_filename.c_str(), nullptr) );
+
+  int count = heif_context_get_item_count(ctx);
+  cout << "ITEM COUNT: " << count << endl << endl;
+  struct heif_infe_item items [count];
+
+  he (heif_context_get_items(ctx, items) );
+
+  for (int i = 0; i < count; i++) {
+    cout << "id: " << items[i].id << endl;
+    cout << "item_type: " << items[i].item_type << endl;
+    cout << "content_type: " << items[i].content_type << endl;
+    cout << "item_name: " << items[i].item_name << endl;
+    cout << "item_uri_type: " << items[i].item_uri_type << endl;
+    cout << endl;
+  }
+
+
+}
+
 
 //MAIN
 int main(int argc, char* argv[]) {
@@ -264,6 +288,7 @@ int main(int argc, char* argv[]) {
       dump_regions(input_filename);
     break;
     case 4:
+      dump_items(input_filename);
     break;
   }
   

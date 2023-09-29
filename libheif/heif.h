@@ -2006,15 +2006,20 @@ struct heif_infe_item
   heif_metadata_compression compression;
 };
 
-// heif_infe_item->id is ignored
+// The heif_infe_item -> heif_item_id is ignored
 LIBHEIF_API
 struct heif_error heif_context_add_infe_metadata(struct heif_context* ctx,
                                                  struct heif_infe_item* item);
 
 LIBHEIF_API
+uint32_t heif_context_get_item_count(struct heif_context* ctx);
+
+// uint32_t count = heif_context_get_item_count()
+// heif_infe_item items[count]
+// heif_context_get_items(ctx, items);
+LIBHEIF_API
 struct heif_error heif_context_get_items(struct heif_context* ctx, 
-                                         struct heif_infe_item** items,
-                                         size_t* count);
+                                         struct heif_infe_item* items);
 
 // --- heif_image allocation
 
