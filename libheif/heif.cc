@@ -3117,26 +3117,8 @@ struct heif_error heif_context_get_items(heif_context* ctx,
 {
 
   auto file = ctx->context->get_heif_file();
-  // int infe_count = file->get_num_images();
-  std::vector<heif_item_id> ids = file->get_item_IDs();
-  uint32_t id_count = (uint32_t) ids.size();
-
-  for (uint32_t i = 0; i < id_count; i++) {
-    heif_item_id id = ids.at(i);
-    auto infe = file->get_infe_box(id);
-
-    items[i].id = infe->get_item_ID();
-    items[i].data;
-    items[i].size;
-    items[i].item_type = infe->get_item_type().c_str();
-    items[i].content_type = infe->get_content_type().c_str();
-    items[i].item_name = infe->get_item_name().c_str();
-    items[i].item_uri_type = infe->get_item_uri_type().c_str();
-    items[i].construction_method;
-    items[i].associated_item_id;
-    items[i].compression;
-  }
-
+  file->get_items(items);  
+ 
 
 
   return error_Ok;
