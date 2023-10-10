@@ -58,12 +58,12 @@
 #include "libheif/plugins/encoder_svt.h"
 #endif
 
-#if WITH_UNCOMPRESSED_CODEC
-#include "libheif/plugins/encoder_uncompressed.h"
+#if HAVE_FFMPEG_HEVC_DECODER
+#include "libheif/plugins/decoder_ffmpeg_hevc.h"
 #endif
 
-#if HAVE_OPENJPEG
-#include "libheif/plugins/heif_encoder_openjpeg.h"
+#if WITH_UNCOMPRESSED_CODEC
+#include "libheif/plugins/encoder_uncompressed.h"
 #endif
 
 #if HAVE_JPEG_DECODER
@@ -151,16 +151,16 @@ void register_default_plugins()
   register_encoder(get_encoder_plugin_svt());
 #endif
 
+#if HAVE_FFMPEG_HEVC_DECODER
+  register_decoder(get_decoder_plugin_ffmpeg());
+#endif
+
 #if HAVE_JPEG_DECODER
   register_decoder(get_decoder_plugin_jpeg());
 #endif
 
 #if HAVE_JPEG_ENCODER
   register_encoder(get_encoder_plugin_jpeg());
-#endif
-
-#if HAVE_OPENJPEG
-  heif::register_encoder(get_encoder_plugin_openjpeg());
 #endif
 
 #if HAVE_OPENJPEG_ENCODER
