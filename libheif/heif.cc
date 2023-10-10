@@ -3108,7 +3108,7 @@ struct heif_error heif_context_add_infe_metadata(struct heif_context* ctx,
     return error.error_struct(ctx->context.get());
   }
   else {
-    return error_Ok;
+    return heif_error_success;
   }
 }
 
@@ -3126,7 +3126,7 @@ struct heif_error heif_context_get_items(heif_context* ctx,
  
 
 
-  return error_Ok;
+  return heif_error_success;
 }
 
 
