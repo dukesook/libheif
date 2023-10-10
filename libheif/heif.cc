@@ -3861,7 +3861,7 @@ struct heif_error heif_property_add_itai(const struct heif_context* context,
     *out_propertyId = id;
   }
 
-  return error_Ok;
+  return heif_error_success;
 }
 
 struct heif_error heif_property_add_taic(const struct heif_context* context,
@@ -3889,5 +3889,5 @@ struct heif_error heif_property_add_taic(const struct heif_context* context,
     *out_propertyId = id;
   }
 
-  return error_Ok;
+  return heif_error_success;
 }
