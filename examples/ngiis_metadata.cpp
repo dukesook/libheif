@@ -1,6 +1,7 @@
 #include <iostream>
 #include <libheif/heif_cxx.h>
 #include <string>
+#include <string.h>
 using namespace std;
 
 
@@ -242,6 +243,60 @@ static void dump_regions(string input_filename) {
 }
 
 
+static void dump_item(heif_infe_item item) {
+    cout << "id: " << item.id << endl;
+    cout << "data_size: " << item.size << endl;
+    if (item.size < 600) {
+      cout << "data: " << item.data << endl;
+    }
+    cout << "item_type: " << item.item_type << endl;
+    cout << "content_type: " << item.content_type << endl;
+    cout << "item_name: " << item.item_name << endl;
+    cout << "item_uri_type: " << item.item_uri_type << endl;
+    cout << endl;
+
+    if (!strcmp(item.item_type, "mime")) {
+      printf("mime detected\n");
+      const char* s = (const char*) item.data;
+      printf("%s\n", s);
+      char* d = (char*) item.data;
+      for (int i = 0; i < item.size; i++) {
+        printf("%c", d[i]);
+      } printf("\n");
+    } 
+    else if (!strcmp(item.item_type, "uri ")) {
+      printf("uri detected\n");
+      const char* s = (const char*) item.data;
+      printf("%s\n", s);
+      char* d = (char*) item.data;
+      for (int i = 0; i < item.size; i++) {
+        printf("%x", d[i]);
+      } printf("\n");
+    }
+    else {
+      printf("unknown item type: %s\n", item.item_type);
+    }
+}
+
+static void dump_items(string input_filename) {
+
+  //GET CONTEXT
+  heif_context* ctx = heif_context_alloc();
+  he (heif_context_read_from_file(ctx, input_filename.c_str(), nullptr) );
+
+  int count = heif_context_get_item_count(ctx);
+  cout << "ITEM COUNT: " << count << endl << endl;
+  struct heif_infe_item items [count];
+
+  he (heif_context_get_items(ctx, items) );
+
+  for (int i = 0; i < count; i++) {
+    // dump_item(items[i]);
+  }
+
+
+}
+
 
 //MAIN
 int main(int argc, char* argv[]) {
@@ -264,6 +319,7 @@ int main(int argc, char* argv[]) {
       dump_regions(input_filename);
     break;
     case 4:
+      dump_items(input_filename);
     break;
   }
   

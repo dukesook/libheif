@@ -22,6 +22,8 @@
 #include "libheif/box.h"
 #include "libheif/heif.h"
 #include "libheif/jpeg2000.h"
+#include "libheif/jpeg.h"
+#include "libheif/vvc.h"
 
 #include <cstdint>
 #include <fstream>
@@ -67,6 +69,54 @@ std::vector<heif_item_id> HeifFile::get_item_IDs() const
   return IDs;
 }
 
+void HeifFile::get_items(heif_infe_item* items) const {
+   
+  std::vector<heif_item_id> ids = get_item_IDs();
+  uint32_t id_count = (uint32_t) ids.size();
+  std::vector<uint8_t> out_data;
+
+  //NGIIS DEBUG//
+  std::vector<uint8_t> xml_data;
+  std::vector<uint8_t> uri_data;
+
+  get_compressed_image_data(1, &xml_data);
+  get_compressed_image_data(2, &uri_data);
+  // printf("xml data size: %lu\n", xml_data.size());
+  // printf("uri data size: %lu\n", uri_data.size());
+  // for (uint8_t b: xml_data) {
+  //   printf("%c", b);
+  // } printf("\n\n");
+  // for (uint8_t b: uri_data) {
+  //   printf("%x ", b);
+  // } printf("\n\n");
+  //NGIIS DEBUG//
+
+  for (uint32_t i = 0; i < id_count; i++) {
+    heif_item_id id = ids.at(i);
+    auto infe = get_infe_box(id);
+    out_data.clear(); 
+    Error err = get_compressed_image_data(id, &out_data);
+    if (err != Error::Ok) {
+      printf("WARNING: %s\n", err.message.c_str());
+    }
+    items[i].id = infe->get_item_ID();
+
+    items[i].item_type = infe->get_item_type().c_str();
+    items[i].content_type = infe->get_content_type().c_str();
+    items[i].item_name = infe->get_item_name().c_str();
+    items[i].item_uri_type = infe->get_item_uri_type().c_str();
+    items[i].construction_method;
+    items[i].associated_item_id;
+    items[i].compression;
+
+    items[i].size = (int) out_data.size();
+    void* d = malloc(out_data.size());
+    memcpy(d, out_data.data(), out_data.size());
+    items[i].data = d;
+    
+  }
+
+}
 
 Error HeifFile::read_from_file(const char* input_filename)
 {
@@ -178,9 +228,7 @@ void HeifFile::set_brand(heif_compression_format format, bool miaf_compatible)
       // Not clear what the correct major brand should be
       m_ftyp_box->set_major_brand(heif_brand2_mif2);
       m_ftyp_box->set_minor_version(0);
-      m_ftyp_box->add_compatible_brand(heif_brand2_mif2);
       m_ftyp_box->add_compatible_brand(heif_brand2_mif1);
-      m_ftyp_box->add_compatible_brand(fourcc("geo1"));
       break;
 
     case heif_compression_JPEG2000:

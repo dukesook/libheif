@@ -21,7 +21,10 @@
 #ifndef LIBHEIF_FILE_H
 #define LIBHEIF_FILE_H
 
+#include "avif.h"
 #include "box.h"
+#include "hevc.h"
+#include "nclx.h"
 
 #include <map>
 #include <memory>
@@ -68,6 +71,8 @@ public:
 
   std::vector<heif_item_id> get_item_IDs() const;
 
+  void get_items(heif_infe_item* items) const;
+
   bool image_exists(heif_item_id ID) const;
 
   std::string get_item_type(heif_item_id ID) const;
@@ -77,7 +82,7 @@ public:
   Error get_compressed_image_data(heif_item_id ID, std::vector<uint8_t>* out_data) const;
 
 
-  std::shared_ptr<Box_infe> get_infe_box(heif_item_id imageID)
+  std::shared_ptr<Box_infe> get_infe_box(heif_item_id imageID) const
   {
     auto iter = m_infe_boxes.find(imageID);
     if (iter == m_infe_boxes.end()) {
