@@ -44,7 +44,11 @@ enum heif_uncompressed_component_type
   component_type_disparity = 9,
   component_type_palette = 10,
   component_type_filter_array = 11,
-  component_type_padded = 12
+  component_type_padded = 12,
+  component_type_cyan = 13,
+  component_type_magenta = 14,
+  component_type_yellow = 15,
+  component_type_key_black = 16
 };
 
 static std::map<heif_uncompressed_component_type, const char*> sNames_uncompressed_component_type{
@@ -60,7 +64,11 @@ static std::map<heif_uncompressed_component_type, const char*> sNames_uncompress
     {component_type_disparity,    "disparity"},
     {component_type_palette,      "palette"},
     {component_type_filter_array, "filter-array"},
-    {component_type_padded,       "padded"}
+    {component_type_padded,       "padded"},
+    {component_type_cyan,         "cyan"},
+    {component_type_magenta,      "magenta"},
+    {component_type_yellow,       "yellow"},
+    {component_type_key_black,    "key (black)"}
 };
 
 enum heif_uncompressed_component_format
@@ -125,9 +133,9 @@ template <typename T> const char* get_name(T val, const std::map<T, const char*>
 
 Error Box_cmpd::parse(BitstreamRange& range)
 {
-  int component_count = range.read16();
+  unsigned int component_count = range.read32();
 
-  for (int i = 0; i < component_count && !range.error() && !range.eof(); i++) {
+  for (unsigned int i = 0; i < component_count && !range.error() && !range.eof(); i++) {
     Component component;
     component.component_type = range.read16();
     if (component.component_type >= 0x8000) {
@@ -161,7 +169,7 @@ Error Box_cmpd::write(StreamWriter& writer) const
 {
   size_t box_start = reserve_box_header_space(writer);
 
-  writer.write16((uint16_t) m_components.size());
+  writer.write32((uint32_t) m_components.size());
   for (const auto& component : m_components) {
     writer.write16(component.component_type);
     if (component.component_type >= 0x8000) {
@@ -179,9 +187,9 @@ Error Box_uncC::parse(BitstreamRange& range)
   parse_full_box_header(range);
   m_profile = range.read32();
 
-  int component_count = range.read16();
+  unsigned int component_count = range.read32();
 
-  for (int i = 0; i < component_count && !range.error() && !range.eof(); i++) {
+  for (unsigned int i = 0; i < component_count && !range.error() && !range.eof(); i++) {
     Component component;
     component.component_index = range.read16();
     component.component_bit_depth = range.read8() + 1;
@@ -203,7 +211,7 @@ Error Box_uncC::parse(BitstreamRange& range)
   m_block_reversed = !!(flags & 0x10);
   m_pad_unknown = !!(flags & 0x08);
 
-  m_pixel_size = range.read8();
+  m_pixel_size = range.read32();
 
   m_row_align_size = range.read32();
 
@@ -247,7 +255,7 @@ std::string Box_uncC::dump(Indent& indent) const
   sstr << indent << "block_reversed: " << m_block_reversed << "\n";
   sstr << indent << "pad_unknown: " << m_pad_unknown << "\n";
 
-  sstr << indent << "pixel_size: " << (int) m_pixel_size << "\n";
+  sstr << indent << "pixel_size: " << m_pixel_size << "\n";
 
   sstr << indent << "row_align_size: " << m_row_align_size << "\n";
 
@@ -271,7 +279,7 @@ Error Box_uncC::write(StreamWriter& writer) const
   size_t box_start = reserve_box_header_space(writer);
 
   writer.write32(m_profile);
-  writer.write16((uint16_t) m_components.size());
+  writer.write32((uint32_t) m_components.size());
   for (const auto& component : m_components) {
     writer.write16(component.component_index);
     writer.write8(component.component_bit_depth - 1);
@@ -288,7 +296,7 @@ Error Box_uncC::write(StreamWriter& writer) const
   flags |= (m_block_reversed ? 1 : 0) << 4;
   flags |= (m_pad_unknown ? 1 : 0) << 3;
   writer.write8(flags);
-  writer.write8(m_pixel_size);
+  writer.write32(m_pixel_size);
   writer.write32(m_row_align_size);
   writer.write32(m_tile_align_size);
   writer.write32(m_num_tile_cols - 1);
@@ -705,13 +713,13 @@ Error UncompressedImageCodec::decode_uncompressed_image(const std::shared_ptr<co
       uint8_t* dst = img->get_plane(channels[c], &stride);
       for (uint32_t row = 0; row < height; row++) {
         long unsigned int tile_row_idx = row % tile_height;
-        long unsigned int tile_row_offset = tile_width * tile_row_idx * channels.size();
+        size_t tile_row_offset = tile_width * tile_row_idx * channels.size();
         uint32_t col = 0;
         for (col = 0; col < width; col++) {
           long unsigned int tile_base_offset = get_tile_base_offset(col, row, uncC, channels, width, height);
           long unsigned int tile_col = col % tile_width;
-          long unsigned int tile_offset = tile_row_offset + tile_col * pixel_stride + pixel_offset;
-          long unsigned int src_offset = tile_base_offset + tile_offset;
+          size_t tile_offset = tile_row_offset + tile_col * pixel_stride + pixel_offset;
+          size_t src_offset = tile_base_offset + tile_offset;
           uint32_t dstPixelIndex = row * stride + col;
           dst[dstPixelIndex] = src[src_offset];
         }
@@ -732,13 +740,13 @@ Error UncompressedImageCodec::decode_uncompressed_image(const std::shared_ptr<co
       uint8_t* dst = img->get_plane(channels[c], &stride);
       for (uint32_t row = 0; row < height; row++) {
         long unsigned int tile_row_idx = row % tile_height;
-        long unsigned int tile_row_offset = tile_width * (tile_row_idx * channels.size() + pixel_offset);
+        size_t tile_row_offset = tile_width * (tile_row_idx * channels.size() + pixel_offset);
         uint32_t col = 0;
         for (col = 0; col < width; col += tile_width) {
           long unsigned int tile_base_offset = get_tile_base_offset(col, row, uncC, channels, width, height);
           long unsigned int tile_col = col % tile_width;
-          long unsigned int tile_offset = tile_row_offset + tile_col;
-          long unsigned int src_offset = tile_base_offset + tile_offset;
+          size_t tile_offset = tile_row_offset + tile_col;
+          size_t src_offset = tile_base_offset + tile_offset;
           uint32_t dst_offset = row * stride + col;
           memcpy(dst + dst_offset, uncompressed_data.data() + src_offset, tile_width);
         }
@@ -853,35 +861,35 @@ Error fill_cmpd_and_uncC(std::shared_ptr<Box_cmpd>& cmpd, std::shared_ptr<Box_un
       {
         component_align = 2;
       }
-      Box_uncC::Component component0 = {0, (uint8_t)(bpp - 1), component_format_unsigned, component_align};
+      Box_uncC::Component component0 = {0, (uint8_t)(bpp), component_format_unsigned, component_align};
       uncC->add_component(component0);
-      Box_uncC::Component component1 = {1, (uint8_t)(bpp - 1), component_format_unsigned, component_align};
+      Box_uncC::Component component1 = {1, (uint8_t)(bpp), component_format_unsigned, component_align};
       uncC->add_component(component1);
-      Box_uncC::Component component2 = {2, (uint8_t)(bpp - 1), component_format_unsigned, component_align};
+      Box_uncC::Component component2 = {2, (uint8_t)(bpp), component_format_unsigned, component_align};
       uncC->add_component(component2);
       if ((image->get_chroma_format() == heif_chroma_interleaved_RGBA) ||
           (image->get_chroma_format() == heif_chroma_interleaved_RRGGBBAA_BE) ||
           (image->get_chroma_format() == heif_chroma_interleaved_RRGGBBAA_LE))
       {
         Box_uncC::Component component3 = {
-            3, (uint8_t)(bpp - 1), component_format_unsigned, component_align};
+            3, (uint8_t)(bpp), component_format_unsigned, component_align};
         uncC->add_component(component3);
       }
     } else {
       uncC->set_interleave_type(interleave_type_component);
       int bpp_red = image->get_bits_per_pixel(heif_channel_R);
-      Box_uncC::Component component0 = {0, (uint8_t)(bpp_red - 1), component_format_unsigned, 0};
+      Box_uncC::Component component0 = {0, (uint8_t)(bpp_red), component_format_unsigned, 0};
       uncC->add_component(component0);
       int bpp_green = image->get_bits_per_pixel(heif_channel_G);
-      Box_uncC::Component component1 = {1, (uint8_t)(bpp_green - 1), component_format_unsigned, 0};
+      Box_uncC::Component component1 = {1, (uint8_t)(bpp_green), component_format_unsigned, 0};
       uncC->add_component(component1);
       int bpp_blue = image->get_bits_per_pixel(heif_channel_B);
-      Box_uncC::Component component2 = {2, (uint8_t)(bpp_blue - 1), component_format_unsigned, 0};
+      Box_uncC::Component component2 = {2, (uint8_t)(bpp_blue), component_format_unsigned, 0};
       uncC->add_component(component2);
       if(image->has_channel(heif_channel_Alpha))
       {
         int bpp_alpha = image->get_bits_per_pixel(heif_channel_Alpha);
-        Box_uncC::Component component3 = {3, (uint8_t)(bpp_alpha - 1), component_format_unsigned, 0};
+        Box_uncC::Component component3 = {3, (uint8_t)(bpp_alpha), component_format_unsigned, 0};
         uncC->add_component(component3);   
       }
     }
@@ -914,12 +922,12 @@ Error fill_cmpd_and_uncC(std::shared_ptr<Box_cmpd>& cmpd, std::shared_ptr<Box_un
       cmpd->add_component(alphaComponent);
     }
     int bpp = image->get_bits_per_pixel(heif_channel_Y);
-    Box_uncC::Component component0 = {0, (uint8_t)(bpp - 1), component_format_unsigned, 0};
+    Box_uncC::Component component0 = {0, (uint8_t)(bpp), component_format_unsigned, 0};
     uncC->add_component(component0);
     if (image->has_channel(heif_channel_Alpha))
     {
       bpp = image->get_bits_per_pixel(heif_channel_Alpha);
-      Box_uncC::Component component1 = {1, (uint8_t)(bpp - 1), component_format_unsigned, 0};
+      Box_uncC::Component component1 = {1, (uint8_t)(bpp), component_format_unsigned, 0};
       uncC->add_component(component1);
     }
     uncC->set_sampling_type(sampling_type_no_subsampling);
@@ -965,7 +973,7 @@ Error UncompressedImageCodec::encode_uncompressed_image(const std::shared_ptr<He
   std::vector<uint8_t> data;
   if (src_image->get_colorspace() == heif_colorspace_YCbCr)
   {
-    unsigned long offset = 0;
+    uint64_t offset = 0;
     for (heif_channel channel : {heif_channel_Y, heif_channel_Cb, heif_channel_Cr})
     {
       int src_stride;
@@ -983,7 +991,7 @@ Error UncompressedImageCodec::encode_uncompressed_image(const std::shared_ptr<He
   {
     if (src_image->get_chroma_format() == heif_chroma_444)
     {
-      unsigned long offset = 0;
+      uint64_t offset = 0;
       std::vector<heif_channel> channels = {heif_channel_R, heif_channel_G, heif_channel_B};
       if (src_image->has_channel(heif_channel_Alpha))
       {
@@ -1045,7 +1053,7 @@ Error UncompressedImageCodec::encode_uncompressed_image(const std::shared_ptr<He
   }
   else if (src_image->get_colorspace() == heif_colorspace_monochrome)
   {
-    unsigned long offset = 0;
+    uint64_t offset = 0;
     std::vector<heif_channel> channels;
     if (src_image->has_channel(heif_channel_Alpha))
     {
