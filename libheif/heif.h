@@ -2196,7 +2196,7 @@ struct heif_infe_item
   const char* item_uri_type;          // if item_type = "uri "
   uint8_t construction_method;        // 0 = mdat, 1 = idat
   heif_item_id associated_item_id;    // TODO - Provide the option to have multiple associated_item_id's instead of just one
-  heif_metadata_compression compression;
+  enum heif_metadata_compression compression;
 };
 
 // The heif_infe_item -> heif_item_id is ignored
