@@ -1363,7 +1363,8 @@ enum heif_item_property_type
   heif_item_property_type_transform_mirror = heif_fourcc('i', 'm', 'i', 'r'),
   heif_item_property_type_transform_rotation = heif_fourcc('i', 'r', 'o', 't'),
   heif_item_property_type_transform_crop = heif_fourcc('c', 'l', 'a', 'p'),
-  heif_item_property_type_image_size = heif_fourcc('i', 's', 'p', 'e')
+  heif_item_property_type_image_size = heif_fourcc('i', 's', 'p', 'e'),
+  heif_item_property_type_uuid = heif_fourcc('u', 'u', 'i', 'd')
 };
 
 // Get the heif_property_id for a heif_item_id.
@@ -1426,6 +1427,20 @@ struct heif_error heif_item_add_property_user_description(const struct heif_cont
 // Only call for objects that you received from heif_item_get_property_user_description().
 LIBHEIF_API
 void heif_property_user_description_release(struct heif_property_user_description*);
+
+struct heif_property_uuid
+{
+  void* data;
+  size_t data_size;
+  uint8_t extended_type[16];
+  const size_t extended_type_size = 16;
+};
+// Add a "uuid" user property to the item.
+LIBHEIF_API
+struct heif_error heif_item_add_property_uuid(const struct heif_context* context,
+                                              heif_item_id itemId,
+                                              const struct heif_property_uuid* uuid,
+                                              heif_property_id* out_propertyId);
 
 enum heif_transform_mirror_direction
 {

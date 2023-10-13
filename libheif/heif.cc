@@ -2023,6 +2023,36 @@ struct heif_error heif_item_add_property_user_description(const struct heif_cont
   return heif_error_success;
 }
 
+struct heif_error heif_item_add_property_uuid(const struct heif_context* context,
+                                              heif_item_id itemId,
+                                              const struct heif_property_uuid* uuid,
+                                              heif_property_id* out_propertyId)
+{
+  if (!context || !uuid || !uuid->data) {
+    return {heif_error_Usage_error, heif_suberror_Null_pointer_argument, "NULL passed"};
+  }
+
+  auto uuid_box = std::make_shared<Box_uuid>();
+  std::vector<uint8_t> extended_type;
+  std::vector<uint8_t> box_payload;
+
+  extended_type.resize(uuid->extended_type_size);
+  box_payload.resize(uuid->data_size);
+
+  std::memcpy(extended_type.data(), uuid->extended_type, uuid->extended_type_size);
+  std::memcpy(box_payload.data(), uuid->data, uuid->data_size);
+
+  uuid_box->set_data(extended_type, box_payload);
+
+  heif_property_id id = context->context->add_property(itemId, uuid_box, false);
+
+  if (out_propertyId) {
+    // *out_propertyId = id;
+  }
+
+  return heif_error_success;
+}
+
 
 enum heif_transform_mirror_direction heif_item_get_property_transform_mirror(const struct heif_context* context,
                                                                              heif_item_id itemId,

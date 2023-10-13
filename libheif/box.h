@@ -134,9 +134,9 @@ private:
   uint64_t m_size = 0;
 
   uint32_t m_type = 0;
-  std::vector<uint8_t> m_uuid_type;
 
 protected:
+  std::vector<uint8_t> m_uuid_type;
   uint32_t m_header_size = 0;
 };
 
@@ -1117,5 +1117,30 @@ protected:
 private:
   uint64_t m_TAI_time_stamp;
   uint8_t m_status_bits;
+};
+
+class Box_uuid : public Box 
+{
+public:
+  Box_uuid()
+  {
+    set_short_type(fourcc("uuid"));
+  }
+
+  std::string dump(Indent&) const override;
+
+  Error write(StreamWriter& writer) const override;
+
+  void set_data(std::vector<uint8_t> extended_type, std::vector<uint8_t> box_payload)
+  {
+    m_uuid_type = extended_type;
+    m_box_payload = box_payload;
+  }
+
+protected:
+  Error parse(BitstreamRange& range) override;
+
+private:
+  std::vector<uint8_t> m_box_payload;
 };
 #endif
