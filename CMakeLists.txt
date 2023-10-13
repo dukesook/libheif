@@ -59,7 +59,7 @@ LIST (APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/modules")
 
 # --- codec plugins
 
-option(ENABLE_PLUGIN_LOADING "Support loading of plugins" ON)
+option(ENABLE_PLUGIN_LOADING "Support loading of plugins" OFF)
 set(PLUGIN_DIRECTORY "${CMAKE_INSTALL_FULL_LIBDIR}/libheif" CACHE STRING "Plugin install directory")
 
 if (ENABLE_PLUGIN_LOADING)
