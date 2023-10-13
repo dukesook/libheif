@@ -64,7 +64,8 @@ static void heif_to_heif(string input_filename, string output_filename, heif_com
 
   //GET IMAGE
   heif_image* img;
-  he (heif_decode_image(handle, &img, heif_colorspace_RGB, heif_chroma_interleaved_RGB, nullptr) ); // decode the image and convert colorspace to RGB, saved as 24bit interleaved
+  enum heif_chroma chroma = heif_chroma_444;
+  he (heif_decode_image(handle, &img, heif_colorspace_RGB, chroma, nullptr) ); // decode the image and convert colorspace to RGB, saved as 24bit interleaved
 
 
   //GET ENCODER
@@ -203,8 +204,8 @@ int main(int argc, char* argv[]) {
   }
   
   // heif_to_multicodec(input_filename, output_filename);
-  // heif_to_heif(input_filename, output_filename, codec);
-  heif_to_heif_add_timestamp(input_filename, output_filename, codec);
+  heif_to_heif(input_filename, output_filename, codec);
+  // heif_to_heif_add_timestamp(input_filename, output_filename, codec);
   
 
   cout << "***** End of ngiis_encode.cpp *****\n";
