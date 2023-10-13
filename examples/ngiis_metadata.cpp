@@ -1,6 +1,7 @@
 #include <iostream>
 #include <libheif/heif_cxx.h>
 #include <string>
+#include <cstring>
 using namespace std;
 
 
@@ -44,8 +45,8 @@ static void insert_udes(string input_filename, string output_filename) {
     "Demonstrate how to use a user description box",
     "Insert tags here"
   };
-  heif_property_id* out_propertyId;
-  heif_item_add_property_user_description(ctx2, 1, &udes, out_propertyId);
+  heif_property_id out_propertyId;
+  heif_item_add_property_user_description(ctx2, 1, &udes, &out_propertyId);
 
   //ENCODE
   he (heif_context_encode_image(ctx2, img, encoder, nullptr, &handle) );
@@ -175,6 +176,50 @@ static void insert_region(string input_filename, string output_filename) {
 
 }
 
+static void insert_uuid_property(string input_filename, string output_filename) {
+
+  //GET CONTEXT
+  heif_context* ctx = heif_context_alloc();
+  he (heif_context_read_from_file(ctx, input_filename.c_str(), nullptr) );
+
+  //GET HANDLE
+  heif_image_handle* handle;
+  he (heif_context_get_primary_image_handle(ctx, &handle) );
+
+  //GET IMAGE
+  heif_image* img;
+  he (heif_decode_image(handle, &img, heif_colorspace_RGB, heif_chroma_interleaved_RGB, nullptr) ); // decode the image and convert colorspace to RGB, saved as 24bit interleaved
+
+
+  //GET ENCODER
+  heif_context* ctx2 = heif_context_alloc(); //You need a separate context
+  heif_encoder* encoder;
+  he (heif_context_get_encoder_for_format(ctx2, heif_compression_HEVC, &encoder) );
+
+  //ADD METADATA
+  vector<uint8_t> data = {0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70};
+  uint8_t extended_type[16] = { 0x10, 0x11, 0x12, 0x13,
+                                0x10, 0x11, 0x12, 0x13,
+                                0x10, 0x11, 0x12, 0x13,
+                                0x10, 0x11, 0x12, 0x13, };
+  struct heif_property_uuid uuid;
+
+  uuid.data = data.data();
+  uuid.data_size = data.size();
+  memcpy (uuid.extended_type, extended_type, 16);
+
+  heif_property_id* out_propertyId;
+  heif_item_add_property_uuid(ctx2, 1, &uuid, out_propertyId);
+
+  //ENCODE
+  he (heif_context_encode_image(ctx2, img, encoder, nullptr, &handle) );
+
+  //WRITE
+  he (heif_context_write_to_file(ctx2, output_filename.c_str()) );
+  printf("Created: %s\n", output_filename.c_str());
+
+}
+
 
 static void dump_regions(string input_filename) {
 
@@ -264,6 +309,7 @@ int main(int argc, char* argv[]) {
       dump_regions(input_filename);
     break;
     case 4:
+      insert_uuid_property(input_filename, output_filename);
     break;
   }
   

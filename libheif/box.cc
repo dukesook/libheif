@@ -3024,3 +3024,30 @@ Error Box_udes::write(StreamWriter& writer) const
   prepend_header(writer, box_start);
   return Error::Ok;
 }
+
+std::string Box_uuid::dump(Indent& indent) const {
+  std::ostringstream sstr;
+  sstr << Box::dump(indent);
+  sstr << indent << "extended_type: ";
+  for (uint8_t b: m_uuid_type) {
+    sstr << b << " ";
+  }
+  sstr << "\n";
+  return sstr.str();
+}
+
+Error Box_uuid::write(StreamWriter& writer) const {
+  size_t box_start = reserve_box_header_space(writer);
+  writer.write(m_uuid_type);
+  writer.write(m_box_payload);
+  prepend_header(writer, box_start);
+  return Error::Ok;
+}
+
+Error Box_uuid::parse(BitstreamRange& range) {
+  //TODO
+  return Error::Ok;
+}
+
+
+
