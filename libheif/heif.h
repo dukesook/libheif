@@ -1464,7 +1464,7 @@ struct heif_error heif_property_add_taic(const struct heif_context* context,
                                          uint64_t time_uncertainty,
                                          int64_t correction_offset,
                                          float clock_drift_rate,
-                                         uint8_t reference_source_type,
+                                         uint8_t clock_source,
                                          heif_property_id* out_propertyId);
 
 // Adds the itai timestamp property to the specified itemId
