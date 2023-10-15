@@ -3076,7 +3076,7 @@ Error Box_taic::write(StreamWriter& writer) const {
   } u_clock_drift_rate = { .f = m_clock_drift_rate };  
   writer.write32(u_clock_drift_rate.uint32); //TODO - verify float to uint32_t convesion is correct
   
-  writer.write8(m_reference_source_type);
+  writer.write8(m_clock_source);
 
   prepend_header(writer, box_start);
   return Error::Ok;
@@ -3096,7 +3096,7 @@ Error Box_taic::parse(BitstreamRange& range) {
   m_correction_offset = (high << 32) | low;
 
   m_clock_drift_rate = (float) range.read32();
-  m_reference_source_type = range.read8();
+  m_clock_source = range.read8();
   return range.get_error();
 }
 

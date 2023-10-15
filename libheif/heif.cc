@@ -3881,7 +3881,7 @@ struct heif_error heif_property_add_itai(const struct heif_context* context,
   }
 
   auto itai = std::make_shared<Box_itai>();
-  itai->set_TAI_time_stamp(timestamp);
+  itai->set_TAI_timestamp(timestamp);
   itai->set_status_bits(status_bits);
 
   bool essential = false;
@@ -3899,7 +3899,7 @@ struct heif_error heif_property_add_taic(const struct heif_context* context,
                                               uint64_t time_uncertainty,
                                               int64_t correction_offset,
                                               float clock_drift_rate,
-                                              uint8_t reference_source_type,
+                                              uint8_t clock_source,
                                               heif_property_id* out_propertyId)
 {
   if (!context) {
@@ -3910,7 +3910,7 @@ struct heif_error heif_property_add_taic(const struct heif_context* context,
   taic->set_time_uncertainty(time_uncertainty);
   taic->set_correction_offset(correction_offset);
   taic->set_clock_drift_rate(clock_drift_rate);
-  taic->set_reference_source_type(reference_source_type);
+  taic->set_clock_source(clock_source);
 
   bool essential = false;
   heif_property_id id = context->context->add_property(itemId, taic, essential);
