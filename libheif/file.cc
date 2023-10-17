@@ -194,6 +194,9 @@ void HeifFile::set_brand(heif_compression_format format, bool miaf_compatible)
       break;
   }
 
+  m_ftyp_box->add_compatible_brand(fourcc("geo1"));
+  m_ftyp_box->add_compatible_brand(fourcc("unif"));
+  
   if (miaf_compatible) {
     m_ftyp_box->add_compatible_brand(heif_brand2_miaf);
   }
