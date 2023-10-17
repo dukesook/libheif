@@ -197,11 +197,11 @@ static void insert_uuid_property(string input_filename, string output_filename) 
   he (heif_context_get_encoder_for_format(ctx2, heif_compression_HEVC, &encoder) );
 
   //ADD METADATA
-  vector<uint8_t> data = {0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70};
+  vector<uint8_t> data = {0xF0, 0xF1, 0xF2, 0xF3, 0XF4, 0xF5, 0xF6};
   uint8_t extended_type[16] = { 0x10, 0x11, 0x12, 0x13,
-                                0x10, 0x11, 0x12, 0x13,
-                                0x10, 0x11, 0x12, 0x13,
-                                0x10, 0x11, 0x12, 0x13, };
+                                0x14, 0x15, 0x16, 0x17,
+                                0x18, 0x1A, 0x1B, 0x1C,
+                                0x1D, 0x1E, 0x1F, 0x20, };
   struct heif_property_uuid uuid;
 
   uuid.data = data.data();
@@ -209,7 +209,8 @@ static void insert_uuid_property(string input_filename, string output_filename) 
   memcpy (uuid.extended_type, extended_type, 16);
 
   heif_property_id* out_propertyId;
-  heif_item_add_property_uuid(ctx2, 1, &uuid, out_propertyId);
+  heif_item_id itemId = 1; //Assume media content id is one
+  heif_item_add_property_uuid(ctx2, itemId, &uuid, out_propertyId);
 
   //ENCODE
   he (heif_context_encode_image(ctx2, img, encoder, nullptr, &handle) );

@@ -3037,10 +3037,11 @@ std::string Box_uuid::dump(Indent& indent) const {
 }
 
 Error Box_uuid::write(StreamWriter& writer) const {
+  //uuid headers are increased by 16
   size_t box_start = reserve_box_header_space(writer);
-  writer.write(m_uuid_type);
+  // writer.write(m_uuid_type); //NOT NEEDED 
   writer.write(m_box_payload);
-  prepend_header(writer, box_start);
+  prepend_header(writer, box_start); //Calls write_header() which write the uuid_type
   return Error::Ok;
 }
 
