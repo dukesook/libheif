@@ -176,36 +176,50 @@ int main(int argc, char* argv[]) {
 
 
   //VARIABLES
-  char* input_filename = argv[1];
-  char* output_filename = argv[2];
-  int compression = 1; //default is HEVC
+  char* input = argv[1];
+  char* output = argv[2];
+  int option = 1; 
+
   if (argc == 4) {
-    compression = atoi(argv[3]);
+    option = atoi(argv[3]);
   }
 
-
   
-  heif_compression_format codec = heif_compression_HEVC;
-  switch(compression) {
+  switch(option) {
     case 1:
-      codec = heif_compression_HEVC;
+      heif_to_heif(input, output, heif_compression_HEVC);
     break;
     case 2:
-      codec = heif_compression_AV1;
+      heif_to_heif(input, output, heif_compression_AV1);
     break;
     case 3:
-      codec = heif_compression_JPEG2000;
+      heif_to_heif(input, output, heif_compression_JPEG2000);
     break;
     case 4:
-      codec = heif_compression_uncompressed;
+      heif_to_heif(input, output, heif_compression_uncompressed);
     break;
     case 5:
-      get_pixel_data(input_filename);
+      get_pixel_data(input);
+    break;
+    case 6:
+      heif_to_multicodec(input, output);
+    break;
+    case 7:
+      printf("7. available option\n");
+    break;
+    case 8:
+      printf("8. available option\n");
+    break;
+    case 9:
+      printf("9. available option\n");
+    break;
+    case 10:
+      printf("10. available option\n");
+    break;
+    default:
+      printf("ERROR: unkown option: %d\n", option);
+
   }
-  
-  // heif_to_multicodec(input_filename, output_filename);
-  heif_to_heif(input_filename, output_filename, codec);
-  // heif_to_heif_add_timestamp(input_filename, output_filename, codec);
   
 
   cout << "***** End of ngiis_encode.cpp *****\n";
