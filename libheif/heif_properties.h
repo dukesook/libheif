@@ -136,7 +136,11 @@ void heif_item_get_property_transform_crop_borders(const struct heif_context* co
 
 // ========================= Timestamps =========================
 // Creates a clock info property if it doesn't already exist.
-// null arguments are ignored. (expect for ctx)
+// A null clock argument implies that the value is unknown.
+// Example:
+//    int64_t offset = 0x100;
+//    heif_property_id propertyId;
+//    heif_property_set_clock_info(ctx, itemId, nullptr, &offset, nullptr, nullptr, &propertyId);
 LIBHEIF_API
 struct heif_error heif_property_set_clock_info(const struct heif_context* ctx,
                                                heif_item_id itemId,
@@ -146,6 +150,8 @@ struct heif_error heif_property_set_clock_info(const struct heif_context* ctx,
                                                const uint8_t* clock_source,
                                                heif_property_id* out_propertyId);
 
+// If the value is unknown, the pointer is set to nullptr.
+// A null clock argument implies that the value is unknown.
 LIBHEIF_API
 struct heif_error heif_property_get_clock_info(const struct heif_context* ctx,
                                                heif_item_id itemId,
