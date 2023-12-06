@@ -2314,6 +2314,83 @@ Error HeifContext::encode_image(const std::shared_ptr<HeifPixelImage>& pixel_ima
   return error;
 }
 
+Error HeifContext::encode_grid_image(const std::vector<std::shared_ptr<HeifPixelImage>>& pixel_images,
+                                     int rows,
+                                     int columns,
+                                     struct heif_encoder* encoder,
+                                     const struct heif_encoding_options& options,
+                                     enum heif_image_input_class input_class,
+                                     std::shared_ptr<Image>& out_grid_image)
+{
+  Error error;
+
+  // TODO: the hdlr box is not the right place for comments
+  // m_heif_file->set_hdlr_library_info(encoder->plugin->get_plugin_name());
+
+  heif_item_id grid_image_id = m_heif_file->add_new_image("grid");
+  out_grid_image = std::make_shared<Image>(this, grid_image_id);
+
+  auto tile_width = pixel_images[0]->get_width(heif_channel_interleaved);
+  auto tile_height = pixel_images[0]->get_height(heif_channel_interleaved);
+
+  ImageGrid grid;
+  grid.set_num_tiles(columns, rows);
+  grid.set_output_size(tile_width * columns, tile_height * rows);
+  auto grid_data = grid.write();
+
+  std::vector<heif_item_id> image_ids;
+
+  for (int i=0; i<rows*columns; i++) {
+
+    std::shared_ptr<Image> out_image;
+
+    switch (encoder->plugin->compression_format) {
+      case heif_compression_HEVC: {
+        error = encode_image_as_hevc(pixel_images[i],
+                                    encoder,
+                                    options,
+                                    heif_image_input_class_normal,
+                                    out_image);
+      }
+        break;
+
+      case heif_compression_AV1: {
+        error = encode_image_as_av1(pixel_images[i],
+                                    encoder,
+                                    options,
+                                    heif_image_input_class_normal,
+                                    out_image);
+      }
+        break;
+
+      default:
+        return Error(heif_error_Encoder_plugin_error, heif_suberror_Unsupported_codec);
+    }
+
+    auto image_id = out_image->get_id();
+
+    // hide the original image
+    m_heif_file->get_infe_box(image_id)->set_hidden_item(true);
+
+    image_ids.push_back(out_image->get_id());
+  }
+
+  m_heif_file->add_iref_reference(grid_image_id, fourcc("dimg"), image_ids);
+
+  m_heif_file->append_iloc_data(grid_image_id, grid_data, 1);
+
+  // TODO: (maybe?) MIAF section, see encode_image_as_hevc.  MIAF might need to
+  //       applied to each tile??
+
+  m_heif_file->add_ispe_property(grid_image_id, tile_width, tile_height);
+
+  m_heif_file->set_brand(encoder->plugin->compression_format,
+                         out_grid_image->is_miaf_compatible());
+
+  return error;
+}
+
+
 /*
 static uint32_t get_rotated_width(heif_orientation orientation, uint32_t w, uint32_t h)
 {
