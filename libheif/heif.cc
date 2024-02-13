@@ -2776,6 +2776,15 @@ struct heif_error heif_context_encode_grid_image(struct heif_context* ctx,
   return heif_error_success;
 }
 
+LIBHEIF_API
+struct heif_error heif_image_divide_into_grid(struct heif_image* input_image,
+                                              int columns,
+                                              int rows,
+                                              struct heif_image_handle** out_images)
+{
+  printf("heif_image_divide_into_grid()\n");
+  return heif_error_success;
+}
 
 struct heif_error heif_context_assign_thumbnail(struct heif_context* ctx,
                                                 const struct heif_image_handle* master_image,
