@@ -823,7 +823,7 @@ protected:
   virtual Error parse_remaining(BitstreamRange& range) { return Error::Ok; }
   virtual std::string dump_remaining(Indent&) const { return ""; }
 
-public:
+protected:
   uint32_t m_group_id;
   std::vector<heif_item_id> m_entity_ids;
 };
