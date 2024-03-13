@@ -2723,25 +2723,25 @@ struct heif_error heif_context_encode_grid_image(struct heif_context* ctx,
   }
 
   heif_encoding_options options;
-  // heif_color_profile_nclx nclx;
-  // if (input_options == nullptr) {
-  //   set_default_options(options);
-  // }
-  // else {
-  //   copy_options(options, *input_options);
+  heif_color_profile_nclx nclx;
+  if (input_options == nullptr) {
+    set_default_options(options);
+  }
+  else {
+    copy_options(options, *input_options);
 
-  //   if (options.output_nclx_profile == nullptr) {
-  //     auto input_nclx = input_images[0]->image->get_color_profile_nclx();
-  //     if (input_nclx) {
-  //       options.output_nclx_profile = &nclx;
-  //       nclx.version = 1;
-  //       nclx.color_primaries = (enum heif_color_primaries)input_nclx->get_colour_primaries();
-  //       nclx.transfer_characteristics = (enum heif_transfer_characteristics)input_nclx->get_transfer_characteristics();
-  //       nclx.matrix_coefficients = (enum heif_matrix_coefficients)input_nclx->get_matrix_coefficients();
-  //       nclx.full_range_flag = input_nclx->get_full_range_flag();
-  //     }
-  //   }
-  // }
+    if (options.output_nclx_profile == nullptr) {
+      auto input_nclx = input_images[0]->image->get_color_profile_nclx();
+      if (input_nclx) {
+        options.output_nclx_profile = &nclx;
+        nclx.version = 1;
+        nclx.color_primaries = (enum heif_color_primaries)input_nclx->get_colour_primaries();
+        nclx.transfer_characteristics = (enum heif_transfer_characteristics)input_nclx->get_transfer_characteristics();
+        nclx.matrix_coefficients = (enum heif_matrix_coefficients)input_nclx->get_matrix_coefficients();
+        nclx.full_range_flag = input_nclx->get_full_range_flag();
+      }
+    }
+  }
 
   std::shared_ptr<HeifContext::Image> image;
   Error error;
