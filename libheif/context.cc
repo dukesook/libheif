@@ -2330,13 +2330,13 @@ Error HeifContext::encode_grid_image(const std::vector<std::shared_ptr<HeifPixel
   heif_item_id grid_image_id = m_heif_file->add_new_image("grid");
   out_grid_image = std::make_shared<Image>(this, grid_image_id);
 
-  auto tile_width = pixel_images[0]->get_width(heif_channel_interleaved);
-  auto tile_height = pixel_images[0]->get_height(heif_channel_interleaved);
+  int tile_width = pixel_images[0]->get_width(heif_channel_interleaved);
+  int tile_height = pixel_images[0]->get_height(heif_channel_interleaved);
 
   ImageGrid grid;
   grid.set_num_tiles(columns, rows);
   grid.set_output_size(tile_width * columns, tile_height * rows);
-  auto grid_data = grid.write();
+  std::vector<uint8_t> grid_data = grid.write();
 
   std::vector<heif_item_id> image_ids;
 
@@ -2382,7 +2382,10 @@ Error HeifContext::encode_grid_image(const std::vector<std::shared_ptr<HeifPixel
   // TODO: (maybe?) MIAF section, see encode_image_as_hevc.  MIAF might need to
   //       applied to each tile??
 
-  m_heif_file->add_ispe_property(grid_image_id, tile_width, tile_height);
+  
+  int image_width = tile_width * columns;
+  int image_height = tile_height * rows;
+  m_heif_file->add_ispe_property(grid_image_id, image_width, image_height);
 
   m_heif_file->set_brand(encoder->plugin->compression_format,
                          out_grid_image->is_miaf_compatible());
