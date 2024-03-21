@@ -69,6 +69,8 @@ public:
 
   heif_item_id get_primary_image_ID() const { return m_pitm_box->get_item_ID(); }
 
+  size_t get_number_of_items() const { return m_infe_boxes.size(); }
+
   std::vector<heif_item_id> get_item_IDs() const;
 
   bool image_exists(heif_item_id ID) const;
@@ -81,6 +83,7 @@ public:
 
   Error get_compressed_image_data(heif_item_id ID, std::vector<uint8_t>* out_data) const;
 
+  std::shared_ptr<Box_ftyp> get_ftyp_box() { return m_ftyp_box; }
 
   std::shared_ptr<Box_infe> get_infe_box(heif_item_id imageID)
   {
@@ -167,7 +170,15 @@ public:
 
   void add_pixi_property(heif_item_id id, uint8_t c1, uint8_t c2 = 0, uint8_t c3 = 0);
 
-  heif_property_id add_property(heif_item_id id, std::shared_ptr<Box> property, bool essential);
+  heif_property_id add_property(heif_item_id id, const std::shared_ptr<Box>& property, bool essential);
+
+  Result<heif_item_id> add_infe(const char* item_type, const uint8_t* data, size_t size);
+
+  Result<heif_item_id> add_infe_mime(const char* content_type, heif_metadata_compression content_encoding, const uint8_t* data, size_t size);
+
+  Result<heif_item_id> add_infe_uri(const char* item_uri_type, const uint8_t* data, size_t size);
+
+  Error set_item_data(const std::shared_ptr<Box_infe>& item, const uint8_t* data, size_t size, heif_metadata_compression compression);
 
   void append_iloc_data(heif_item_id id, const std::vector<uint8_t>& nal_packets, uint8_t construction_method = 0);
 
@@ -221,10 +232,10 @@ private:
   Error parse_heif_file(BitstreamRange& bitstream);
 
   Error check_for_ref_cycle(heif_item_id ID,
-                            std::shared_ptr<Box_iref>& iref_box) const;
+                            const std::shared_ptr<Box_iref>& iref_box) const;
 
   Error check_for_ref_cycle_recursion(heif_item_id ID,
-                                      std::shared_ptr<Box_iref>& iref_box,
+                                      const std::shared_ptr<Box_iref>& iref_box,
                                       std::unordered_set<heif_item_id>& parent_items) const;
 
   std::shared_ptr<Box_infe> get_infe(heif_item_id ID) const;

@@ -185,6 +185,7 @@ void HeifFile::set_brand(heif_compression_format format, bool miaf_compatible)
       break;
 
     case heif_compression_JPEG2000:
+    case heif_compression_HTJ2K:
       m_ftyp_box->set_major_brand(fourcc("j2ki"));
       m_ftyp_box->set_minor_version(0);
       m_ftyp_box->add_compatible_brand(fourcc("mif1"));
@@ -397,7 +398,7 @@ Error HeifFile::parse_heif_file(BitstreamRange& range)
 
 
 Error HeifFile::check_for_ref_cycle(heif_item_id ID,
-                                    std::shared_ptr<Box_iref>& iref_box) const
+                                    const std::shared_ptr<Box_iref>& iref_box) const
 {
   std::unordered_set<heif_item_id> parent_items;
   return check_for_ref_cycle_recursion(ID, iref_box, parent_items);
@@ -405,7 +406,7 @@ Error HeifFile::check_for_ref_cycle(heif_item_id ID,
 
 
 Error HeifFile::check_for_ref_cycle_recursion(heif_item_id ID,
-                                    std::shared_ptr<Box_iref>& iref_box,
+                                    const std::shared_ptr<Box_iref>& iref_box,
                                     std::unordered_set<heif_item_id>& parent_items) const {
   if (parent_items.find(ID) != parent_items.end()) {
     return Error(heif_error_Invalid_input,
@@ -594,12 +595,12 @@ int HeifFile::get_luma_bits_per_pixel_from_configuration(heif_item_id imageID) c
   // JPEG 2000
 
   if (image_type == "j2k1") {
-    auto siz = jpeg2000_get_SIZ_segment(*this, imageID);
-    if (siz.components.empty()) {
+    JPEG2000MainHeader header;
+    Error err = header.parseHeader(*this, imageID);
+    if (err) {
       return -1;
     }
-
-    return siz.components[0].precision;
+    return header.get_precision(0);
   }
 
 #if WITH_UNCOMPRESSED_CODEC
@@ -657,13 +658,12 @@ int HeifFile::get_chroma_bits_per_pixel_from_configuration(heif_item_id imageID)
   // JPEG 2000
 
   if (image_type == "j2k1") {
-    auto siz = jpeg2000_get_SIZ_segment(*this, imageID);
-    if (siz.components.size() <= 1) {
+    JPEG2000MainHeader header;
+    Error err = header.parseHeader(*this, imageID);
+    if (err) {
       return -1;
     }
-
-    // TODO: this is a quick hack. It is more complicated for JPEG2000 because these can be any kind of colorspace (e.g. RGB).
-    return siz.components[1].precision;
+    return header.get_precision(1);
   }
 
   return -1;
@@ -986,7 +986,7 @@ void HeifFile::add_clap_property(heif_item_id id, uint32_t clap_width, uint32_t 
 }
 
 
-heif_property_id HeifFile::add_property(heif_item_id id, std::shared_ptr<Box> property, bool essential)
+heif_property_id HeifFile::add_property(heif_item_id id, const std::shared_ptr<Box>& property, bool essential)
 {
   int index = m_ipco_box->append_child_box(property);
 
@@ -1171,6 +1171,102 @@ std::shared_ptr<Box_j2kH> HeifFile::add_j2kH_property(heif_item_id id)
   m_ipma_box->add_property_for_item_ID(id, Box_ipma::PropertyAssociation{true, uint16_t(index + 1)});
 
   return j2kH;
+}
+
+
+Result<heif_item_id> HeifFile::add_infe(const char* item_type, const uint8_t* data, size_t size)
+{
+  Result<heif_item_id> result;
+
+  // create an infe box describing what kind of data we are storing (this also creates a new ID)
+
+  auto infe_box = add_new_infe_box(item_type);
+  infe_box->set_hidden_item(true);
+
+  heif_item_id metadata_id = infe_box->get_item_ID();
+  result.value = metadata_id;
+
+  set_item_data(infe_box, data, size, heif_metadata_compression_off);
+
+  return result;
+}
+
+
+Result<heif_item_id> HeifFile::add_infe_mime(const char* content_type, heif_metadata_compression content_encoding, const uint8_t* data, size_t size)
+{
+  Result<heif_item_id> result;
+
+  // create an infe box describing what kind of data we are storing (this also creates a new ID)
+
+  auto infe_box = add_new_infe_box("mime");
+  infe_box->set_hidden_item(true);
+  infe_box->set_content_type(content_type);
+
+  heif_item_id metadata_id = infe_box->get_item_ID();
+  result.value = metadata_id;
+
+  set_item_data(infe_box, data, size, content_encoding);
+
+  return result;
+}
+
+
+Result<heif_item_id> HeifFile::add_infe_uri(const char* item_uri_type, const uint8_t* data, size_t size)
+{
+  Result<heif_item_id> result;
+
+  // create an infe box describing what kind of data we are storing (this also creates a new ID)
+
+  auto infe_box = add_new_infe_box("uri ");
+  infe_box->set_hidden_item(true);
+  infe_box->set_item_uri_type(item_uri_type);
+
+  heif_item_id metadata_id = infe_box->get_item_ID();
+  result.value = metadata_id;
+
+  set_item_data(infe_box, data, size, heif_metadata_compression_off);
+
+  return result;
+}
+
+
+Error HeifFile::set_item_data(const std::shared_ptr<Box_infe>& item, const uint8_t* data, size_t size, heif_metadata_compression compression)
+{
+  // --- metadata compression
+
+  if (compression == heif_metadata_compression_auto) {
+    compression = heif_metadata_compression_off; // currently, we don't use header compression by default
+  }
+
+  // only set metadata compression for MIME type data which has 'content_encoding' field
+  if (compression != heif_metadata_compression_off &&
+      item->get_item_type() != "mime") {
+    // TODO: error, compression not supported
+  }
+
+
+  std::vector<uint8_t> data_array;
+  if (compression == heif_metadata_compression_deflate) {
+#if WITH_DEFLATE_HEADER_COMPRESSION
+    data_array = deflate((const uint8_t*) data, size);
+    item->set_content_encoding("deflate");
+#else
+    return Error(heif_error_Unsupported_feature,
+                 heif_suberror_Unsupported_header_compression_method);
+#endif
+  }
+  else {
+    // uncompressed data, plain copy
+
+    data_array.resize(size);
+    memcpy(data_array.data(), data, size);
+  }
+
+  // copy the data into the file, store the pointer to it in an iloc box entry
+
+  append_iloc_data(item->get_item_ID(), data_array);
+
+  return Error::Ok;
 }
 
 
