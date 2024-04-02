@@ -199,7 +199,7 @@ endif()
 
 # uncompressed
 
-option(WITH_UNCOMPRESSED_CODEC " Support internal ISO/IEC 23001-17 uncompressed codec (experimental) " OFF)
+option(WITH_UNCOMPRESSED_CODEC " Support internal ISO/IEC 23001-17 uncompressed codec (experimental) " ON)
 
 
 # --- show codec compilation summary
