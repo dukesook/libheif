@@ -2390,6 +2390,8 @@ Error HeifContext::encode_grid_image(const std::vector<std::shared_ptr<HeifPixel
   m_heif_file->set_brand(encoder->plugin->compression_format,
                          out_grid_image->is_miaf_compatible());
 
+  m_all_images.insert(std::make_pair(grid_image_id, out_grid_image));
+
   return error;
 }
 
