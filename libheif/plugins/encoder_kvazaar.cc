@@ -35,6 +35,7 @@ extern "C" {
 
 static const char* kError_unspecified_error = "Unspecified encoder error";
 static const char* kError_unsupported_bit_depth = "Bit depth not supported by kvazaar";
+static const char* kError_unsupported_chroma = "Unsupported chroma type";
 //static const char* kError_unsupported_image_size = "Images smaller than 16 pixels are not supported";
 
 
@@ -382,8 +383,15 @@ static struct heif_error kvazaar_encode_image(void* encoder_raw, const struct he
 
   kvz_config* config = api->config_alloc();
   api->config_init(config); // param, encoder->preset.c_str(), encoder->tune.c_str());
+
 #if HAVE_KVAZAAR_ENABLE_LOGGING
   config->enable_logging_output = 0;
+#endif
+
+#if !ENABLE_MULTITHREADING_SUPPORT
+  // 0: Process everything with main thread
+  // -1 (default): Select automatically.
+  config->threads = 0;
 #endif
 
 #if 1
@@ -484,6 +492,13 @@ static struct heif_error kvazaar_encode_image(void* encoder_raw, const struct he
     chroma_height_shift = 0;
     input_chroma_width = input_width;
     input_chroma_height = input_height;
+  }
+  else {
+    return heif_error{
+      heif_error_Encoder_plugin_error,
+      heif_suberror_Unsupported_image_type,
+      kError_unsupported_chroma
+    };
   }
 
   if (chroma != heif_chroma_monochrome) {
