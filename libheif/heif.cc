@@ -2786,6 +2786,16 @@ struct heif_error heif_image_divide_into_grid(struct heif_image* input_image,
   return heif_error_success;
 }
 
+
+struct heif_error heif_context_add_pyramid_layer(struct heif_context* ctx,
+                                              uint16_t binning,
+                                              struct heif_image_handle* layer)
+{
+  Error error = ctx->context->add_pyramid_layer(binning, layer->image);
+  return error.error_struct(ctx->context.get());
+}
+
+
 struct heif_error heif_context_assign_thumbnail(struct heif_context* ctx,
                                                 const struct heif_image_handle* master_image,
                                                 const struct heif_image_handle* thumbnail_image)

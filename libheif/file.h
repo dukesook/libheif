@@ -92,6 +92,8 @@ public:
     return iter->second;
   }
 
+  std::shared_ptr<Box_meta> get_meta_box() { return m_meta_box; }
+
   std::shared_ptr<Box_iref> get_iref_box() { return m_iref_box; }
 
   std::shared_ptr<Box_ipco> get_ipco_box() { return m_ipco_box; }
@@ -101,6 +103,8 @@ public:
   std::shared_ptr<Box_ipma> get_ipma_box() { return m_ipma_box; }
 
   std::shared_ptr<Box_ipma> get_ipma_box() const { return m_ipma_box; }
+
+  std::shared_ptr<Box_iloc> get_iloc_box() { return m_iloc_box; }
 
   Error get_properties(heif_item_id imageID,
                        std::vector<std::shared_ptr<Box>>& properties) const;

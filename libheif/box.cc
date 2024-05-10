@@ -516,10 +516,6 @@ Error Box::read(BitstreamRange& range, std::shared_ptr<Box>* result)
       box = std::make_shared<Box_idat>();
       break;
 
-    case fourcc("grpl"):
-      box = std::make_shared<Box_grpl>();
-      break;
-
     case fourcc("altr"):
       box = std::make_shared<EntityGroup>(fourcc("altr"));
       break;
@@ -2929,25 +2925,6 @@ Error Box_idat::read_data(const std::shared_ptr<StreamReader>& istr,
 }
 
 
-Error Box_grpl::parse(BitstreamRange& range)
-{
-  //parse_full_box_header(range);
-
-  return read_children(range);
-}
-
-
-std::string Box_grpl::dump(Indent& indent) const
-{
-  std::ostringstream sstr;
-  sstr << Box::dump(indent);
-
-  sstr << dump_children(indent);
-
-  return sstr.str();
-}
-
-
 Error EntityGroup::parse(BitstreamRange& range)
 {
 
@@ -2992,6 +2969,24 @@ std::string EntityGroup::dump(Indent& indent) const
 }
 
 
+Error EntityGroup::write(StreamWriter& writer) const
+{
+  size_t box_start = reserve_box_header_space(writer);
+
+  writer.write32(m_group_id);
+  writer.write32((uint32_t)m_entity_ids.size());
+  for (uint32_t id : m_entity_ids) {
+    writer.write32(id);
+  }
+
+  write_remaining(writer);
+
+  prepend_header(writer, box_start);
+
+  return Error::Ok;
+}
+
+
 Error Box_ster::parse_remaining(BitstreamRange& range)
 {
   uint32_t flags = range.read32();
@@ -3006,6 +3001,23 @@ std::string Box_ster::dump_remaining(Indent& indent) const
   sstr << indent << "left view flag: " << m_left_view_flag << "\n";
 
   return sstr.str();
+}
+
+
+Error Box_pymd::write_remaining(StreamWriter& writer) const
+{
+
+  writer.write16(m_tile_size_x);
+  writer.write16(m_tile_size_y);
+
+  for (Layer layer: m_layers) {
+    writer.write16(layer.binning);
+    writer.write16(layer.tiles_in_row - 1);
+    writer.write16(layer.tiles_in_column - 1);
+  }
+
+
+  return Error::Ok;
 }
 
 

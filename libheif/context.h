@@ -58,6 +58,49 @@ public:
 };
 
 
+class ImageGrid
+{
+public:
+  Error parse(const std::vector<uint8_t>& data);
+
+  std::vector<uint8_t> write() const;
+
+  std::string dump() const;
+
+  uint32_t get_width() const { return m_output_width; }
+
+  uint32_t get_height() const { return m_output_height; }
+
+  uint16_t get_rows() const
+  {
+    return m_rows;
+  }
+
+  uint16_t get_columns() const
+  {
+    return m_columns;
+  }
+
+  void set_num_tiles(uint16_t columns, uint16_t rows)
+  {
+    m_rows = rows;
+    m_columns = columns;
+  }
+
+  void set_output_size(uint32_t width, uint32_t height)
+  {
+    m_output_width = width;
+    m_output_height = height;
+  }
+
+private:
+  uint16_t m_rows = 0;
+  uint16_t m_columns = 0;
+  uint32_t m_output_width = 0;
+  uint32_t m_output_height = 0;
+};
+
+
 // This is a higher-level view than HeifFile.
 // Images are grouped logically into main images and their thumbnails.
 // The class also handles automatic color-space conversion.
@@ -461,6 +504,10 @@ public:
                              heif_metadata_compression compression);
 
   heif_property_id add_property(heif_item_id targetItem, std::shared_ptr<Box> property, bool essential);
+
+  Error add_pyramid_layer(uint16_t binning, std::shared_ptr<HeifContext::Image> layer);
+
+  Error get_image_grid(heif_item_id grid_id, std::shared_ptr<ImageGrid>& out_grid);
 
   // --- region items
 

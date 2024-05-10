@@ -818,10 +818,15 @@ public:
   }
   std::string dump(Indent&) const override;
 
+  Error write(StreamWriter& writer) const override;
+
+  void set_group_id(uint32_t id) { m_group_id = id; }
+
 protected:
   Error parse(BitstreamRange& range) override;
   virtual Error parse_remaining(BitstreamRange& range) { return Error::Ok; }
   virtual std::string dump_remaining(Indent&) const { return ""; }
+  virtual Error write_remaining(StreamWriter& writer) const { return Error::Ok; }
 
 protected:
   uint32_t m_group_id;
@@ -845,15 +850,45 @@ protected:
 };
 
 
-class Box_grpl : public Box
+class Box_pymd : public EntityGroup
 {
 public:
-  std::string dump(Indent&) const override;
+  Box_pymd() : EntityGroup(fourcc("pymd"))
+  {
+  }
+  
+  void set_tile_size(uint16_t x, uint16_t y)
+  {
+    m_tile_size_x = x;
+    m_tile_size_y = y;
+  }
+  
+  void insert_layer(uint32_t id, uint16_t binning, uint16_t tiles_in_row, uint16_t tiles_in_column)
+  {
+    m_entity_ids.push_back(id);
+
+    Layer layer;
+    layer.binning = binning;
+    layer.tiles_in_row = tiles_in_row;
+    layer.tiles_in_column = tiles_in_column;
+    m_layers.push_back(layer);
+  }
+
+private:
+  struct Layer
+  {
+    uint16_t binning;
+    uint16_t tiles_in_row;
+    uint16_t tiles_in_column;
+  };
+  uint16_t m_tile_size_x;
+  uint16_t m_tile_size_y;
+  std::vector<Layer> m_layers;
 
 protected:
-  Error parse(BitstreamRange& range) override;
-
-  std::vector<EntityGroup> m_entity_groups;
+  // Error parse_remaining(BitstreamRange& range) override;
+  // std::string dump_remaining(Indent&) const override;
+  Error write_remaining(StreamWriter& writer) const override;
 };
 
 

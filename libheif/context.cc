@@ -122,51 +122,6 @@ static uint32_t readvec(const std::vector<uint8_t>& data, int& ptr, int len)
 }
 
 
-class ImageGrid
-{
-public:
-  Error parse(const std::vector<uint8_t>& data);
-
-  std::vector<uint8_t> write() const;
-
-  std::string dump() const;
-
-  uint32_t get_width() const { return m_output_width; }
-
-  uint32_t get_height() const { return m_output_height; }
-
-  uint16_t get_rows() const
-  {
-    assert(m_rows <= 256);
-    return m_rows;
-  }
-
-  uint16_t get_columns() const
-  {
-    assert(m_columns <= 256);
-    return m_columns;
-  }
-
-  void set_num_tiles(uint16_t columns, uint16_t rows)
-  {
-    m_rows = rows;
-    m_columns = columns;
-  }
-
-  void set_output_size(uint32_t width, uint32_t height)
-  {
-    m_output_width = width;
-    m_output_height = height;
-  }
-
-private:
-  uint16_t m_rows = 0;
-  uint16_t m_columns = 0;
-  uint32_t m_output_width = 0;
-  uint32_t m_output_height = 0;
-};
-
-
 Error ImageGrid::parse(const std::vector<uint8_t>& data)
 {
   if (data.size() < 8) {
@@ -3508,3 +3463,61 @@ heif_property_id HeifContext::add_property(heif_item_id targetItem, std::shared_
 
   return id;
 }
+
+Error HeifContext::get_image_grid(heif_item_id grid_id, std::shared_ptr<ImageGrid>& out_grid) {
+  
+  std::shared_ptr<Box_iloc> iloc = get_heif_file()->get_iloc_box();
+  const std::vector<Box_iloc::Item> iloc_items = iloc->get_items();
+
+  for (const auto& item: iloc_items) {
+    if (item.item_ID == grid_id) {
+      Box_iloc::Extent extent = item.extents.at(0);
+      out_grid->parse(extent.data);
+      return Error::Ok;
+    }
+  }
+
+  return Error(heif_error_Invalid_input, heif_suberror_Nonexisting_item_referenced);
+}
+
+Error HeifContext::add_pyramid_layer(uint16_t binning, std::shared_ptr<HeifContext::Image> layer)
+{
+  // ImageGrid Data
+  std::shared_ptr<ImageGrid> grid = std::make_shared<ImageGrid>();
+  heif_item_id id = layer->get_id();
+  get_image_grid(id, grid);
+  uint16_t rows = grid->get_rows();
+  uint16_t columns = grid->get_columns();
+  uint16_t full_width = grid->get_width();
+  uint16_t full_height = grid->get_height();
+  uint16_t tile_width = full_width / rows;
+  uint16_t tile_height = full_height / columns;
+  // TODO: Handle Padding
+
+  // Group Lists Box 'grpl'
+  std::shared_ptr<Box_meta> meta = m_heif_file->get_meta_box();
+  std::shared_ptr<Box> grpl;
+  grpl = meta->get_child_box(fourcc("grpl"));
+  if (!grpl) {
+    grpl = std::make_shared<Box>();
+    grpl->set_short_type(fourcc("grpl"));
+    meta->append_child_box(grpl);
+  }
+
+  // Image Pyramid Box 'pymd'
+  std::shared_ptr<Box> pymd_box_uncasted = grpl->get_child_box(fourcc("pymd"));
+  std::shared_ptr<Box_pymd> pymd = std::dynamic_pointer_cast<Box_pymd>(pymd_box_uncasted);
+  if (!pymd) {
+    pymd = std::make_shared<Box_pymd>();
+    pymd->set_tile_size(tile_width, tile_height);
+    pymd->set_group_id(1000); // TODO: Don't hard code group_id
+    grpl->append_child_box(pymd);
+  }
+
+  // Insert Layer
+  pymd->insert_layer(id, binning, rows, columns);
+
+  return Error::Ok;
+}
+
+

@@ -2053,6 +2053,12 @@ struct heif_error heif_image_divide_into_grid(struct heif_image* input_image,
                                                   struct heif_image_handle** out_images);
 
 LIBHEIF_API
+struct heif_error heif_context_add_pyramid_layer(struct heif_context* ctx,
+                                                 uint16_t binning,
+                                                 struct heif_image_handle* layer);
+
+
+LIBHEIF_API
 struct heif_error heif_context_set_primary_image(struct heif_context*,
                                                  struct heif_image_handle* image_handle);
 
