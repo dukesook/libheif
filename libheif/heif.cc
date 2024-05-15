@@ -2776,13 +2776,70 @@ struct heif_error heif_context_encode_grid_image(struct heif_context* ctx,
   return heif_error_success;
 }
 
-LIBHEIF_API
 struct heif_error heif_image_divide_into_grid(struct heif_image* input_image,
-                                              int columns,
-                                              int rows,
-                                              struct heif_image_handle** out_images)
+                                              uint32_t rows,
+                                              uint32_t columns,
+                                              struct heif_image** out_images)
 {
-  printf("heif_image_divide_into_grid()\n");
+  // Varibles
+  int stride;
+  uint32_t bit_depth = 8;
+  uint32_t channel_count = 3;
+  uint32_t full_width = input_image->image->get_width();
+  uint32_t full_height = input_image->image->get_height();
+  uint32_t image_stride = full_width * channel_count;
+  uint32_t tile_width = full_width / columns;
+  uint32_t tile_height = full_height / rows;
+  uint32_t tile_stride = tile_width * channel_count;
+  enum heif_channel channel = heif_channel_interleaved;
+  enum heif_colorspace colorspace = heif_colorspace_RGB;
+  enum heif_chroma chroma = heif_chroma_interleaved_RGB;
+  struct heif_error error;
+
+  if (out_images == nullptr) {
+    return {heif_error_Usage_error, heif_suberror_Null_pointer_argument, "out_images is null"};
+  }
+  
+  if (input_image == nullptr) {
+    return {heif_error_Usage_error, heif_suberror_Null_pointer_argument, "input_image is null"};
+  }
+
+  if (heif_image_has_channel(input_image, heif_channel_interleaved)) {
+    channel = heif_channel_interleaved;
+    channel_count = 3;
+  }
+  else {
+    return {heif_error_Usage_error, heif_suberror_Unspecified, "unsupported channel"};
+  }
+  
+  const uint8_t* input_plane = heif_image_get_plane_readonly(input_image, channel, &stride);
+  for (uint32_t row = 0; row < rows; row++) {
+    for (uint32_t col = 0; col < columns; col++) {
+      uint32_t tile_index = (row * columns) + col;
+      heif_image* tile;
+
+      // Create Tile
+      error = heif_image_create(tile_width, tile_height, colorspace, chroma, &tile);
+      if (error.code) {
+        return error;
+      }
+      error = heif_image_add_plane(tile, channel, tile_width, tile_height, bit_depth);
+      if (error.code) {
+        return error;
+      }
+      uint8_t* tile_plane = heif_image_get_plane(tile, channel, &stride);
+
+      // Copy Tile
+      for (uint32_t y = 0; y < tile_height; y++) {
+        uint32_t i_src_y = (row * tile_height + y) * image_stride;
+        uint32_t i_dest = y * tile_stride;
+        const uint8_t* src_ptr = input_plane + i_src_y + (col * tile_width * channel_count);
+        uint8_t* dest_ptr = tile_plane + i_dest;
+        memcpy(dest_ptr, src_ptr, tile_stride);
+      }
+      out_images[tile_index] = tile;
+    }
+  }
   return heif_error_success;
 }
 
