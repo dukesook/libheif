@@ -2046,11 +2046,17 @@ struct heif_error heif_context_encode_grid_image(struct heif_context* ctx,
                                                  const struct heif_encoding_options* input_options,
                                                  struct heif_image_handle** out_image_handle);
 
+/**
+ * Divides the input_image into a list of images.
+ *
+ * @param out_images User allocated array of heif_image pointers.
+ *                   Example: struct heif_image* out_images[image_count];
+ */
 LIBHEIF_API
 struct heif_error heif_image_divide_into_grid(struct heif_image* input_image,
-                                                  int columns,
-                                                  int rows,
-                                                  struct heif_image_handle** out_images);
+                                                  uint32_t rows,
+                                                  uint32_t columns,
+                                                  struct heif_image** out_images);
 
 LIBHEIF_API
 struct heif_error heif_context_add_pyramid_layer(struct heif_context* ctx,
