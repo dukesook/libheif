@@ -2040,8 +2040,8 @@ struct heif_error heif_context_encode_image(struct heif_context*,
 LIBHEIF_API
 struct heif_error heif_context_encode_grid_image(struct heif_context* ctx,
                                                  struct heif_image** input_images,   // array of tile images
-                                                 int columns,
-                                                 int rows,
+                                                 uint16_t columns,
+                                                 uint16_t rows,
                                                  struct heif_encoder* encoder,
                                                  const struct heif_encoding_options* input_options,
                                                  struct heif_image_handle** out_image_handle);

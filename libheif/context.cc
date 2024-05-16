@@ -2270,8 +2270,8 @@ Error HeifContext::encode_image(const std::shared_ptr<HeifPixelImage>& pixel_ima
 }
 
 Error HeifContext::encode_grid_image(const std::vector<std::shared_ptr<HeifPixelImage>>& pixel_images,
-                                     int rows,
-                                     int columns,
+                                     uint16_t rows,
+                                     uint16_t columns,
                                      struct heif_encoder* encoder,
                                      const struct heif_encoding_options& options,
                                      enum heif_image_input_class input_class,
@@ -2281,9 +2281,6 @@ Error HeifContext::encode_grid_image(const std::vector<std::shared_ptr<HeifPixel
 
   // TODO: the hdlr box is not the right place for comments
   // m_heif_file->set_hdlr_library_info(encoder->plugin->get_plugin_name());
-
-  heif_item_id grid_image_id = m_heif_file->add_new_image("grid");
-  out_grid_image = std::make_shared<Image>(this, grid_image_id);
 
   int tile_width = pixel_images[0]->get_width(heif_channel_interleaved);
   int tile_height = pixel_images[0]->get_height(heif_channel_interleaved);
@@ -2330,14 +2327,16 @@ Error HeifContext::encode_grid_image(const std::vector<std::shared_ptr<HeifPixel
     image_ids.push_back(out_image->get_id());
   }
 
+  // Add Grid
+  heif_item_id grid_image_id = m_heif_file->add_new_image("grid");
+  out_grid_image = std::make_shared<Image>(this, grid_image_id);
   m_heif_file->add_iref_reference(grid_image_id, fourcc("dimg"), image_ids);
-
   m_heif_file->append_iloc_data(grid_image_id, grid_data, 1);
 
   // TODO: (maybe?) MIAF section, see encode_image_as_hevc.  MIAF might need to
   //       applied to each tile??
 
-  
+  // Add ISPE property
   int image_width = tile_width * columns;
   int image_height = tile_height * rows;
   m_heif_file->add_ispe_property(grid_image_id, image_width, image_height);

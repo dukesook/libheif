@@ -434,8 +434,8 @@ public:
                      std::shared_ptr<Image>& out_image);
 
   Error encode_grid_image(const std::vector<std::shared_ptr<HeifPixelImage>>& images,
-                          int rows,
-                          int columns,
+                          uint16_t rows,
+                          uint16_t columns,
                           struct heif_encoder* encoder,
                           const struct heif_encoding_options& options,
                           enum heif_image_input_class input_class,
