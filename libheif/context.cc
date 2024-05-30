@@ -833,8 +833,9 @@ Error HeifContext::interpret_heif_file()
 
   for (heif_item_id id : image_IDs) {
     std::string item_type = m_heif_file->get_item_type(id);
-    // skip region annotations, handled next
-    if (item_type == "rgan") {
+    // 'rgan': skip region annotations, handled next
+    // 'iden': iden images are no metadata
+    if (item_type == "rgan" || item_type == "iden") {
       continue;
     }
     std::string content_type = m_heif_file->get_content_type(id);
@@ -851,10 +852,15 @@ Error HeifContext::interpret_heif_file()
 
     Error err = m_heif_file->get_compressed_image_data(id, &(metadata->m_data));
     if (err) {
-      return err;
+      if (item_type == "Exif" || item_type == "mime") {
+        // these item types should have data
+        return err;
+      }
+      else {
+        // anything else is probably something that we don't understand yet
+        continue;
+      }
     }
-
-    //std::cerr.write((const char*)data.data(), data.size());
 
 
     // --- assign metadata to the image
@@ -1160,8 +1166,12 @@ Error HeifContext::Image::get_preferred_decoding_colorspace(heif_colorspace* out
     *out_chroma = (heif_chroma)(av1C->get_configuration().get_heif_chroma());
   }
   else if (auto j2kH = m_heif_context->m_heif_file->get_property<Box_j2kH>(id)) {
-    JPEG2000_SIZ_segment siz = jpeg2000_get_SIZ_segment(*m_heif_context->m_heif_file, id);
-    *out_chroma = siz.get_chroma_format();
+    JPEG2000MainHeader jpeg2000Header;
+    err = jpeg2000Header.parseHeader(*m_heif_context->m_heif_file, id);
+    if (err) {
+      return err;
+    }
+    *out_chroma = jpeg2000Header.get_chroma_format();
   }
 
   return err;
@@ -1276,7 +1286,7 @@ Error HeifContext::decode_image_planar(heif_item_id ID,
 
     const struct heif_decoder_plugin* decoder_plugin = get_decoder(compression, options.decoder_id);
     if (!decoder_plugin) {
-      return Error(heif_error_Unsupported_feature, heif_suberror_Unsupported_codec);
+      return Error(heif_error_Plugin_loading_error, heif_suberror_No_matching_decoder_installed);
     }
 
     std::vector<uint8_t> data;
@@ -2223,7 +2233,8 @@ Error HeifContext::encode_image(const std::shared_ptr<HeifPixelImage>& pixel_ima
                                   out_image);
     }
       break;
-    case heif_compression_JPEG2000: {
+    case heif_compression_JPEG2000:
+    case heif_compression_HTJ2K: {
       error = encode_image_as_jpeg2000(pixel_image,
                                        encoder,
                                        options,
@@ -3366,19 +3377,20 @@ Error HeifContext::add_exif_metadata(const std::shared_ptr<Image>& master_image,
 
   return add_generic_metadata(master_image,
                               data_array.data(), (int) data_array.size(),
-                              "Exif", nullptr, heif_metadata_compression_off);
+                              "Exif", nullptr, nullptr, heif_metadata_compression_off, nullptr);
 }
 
 
 Error HeifContext::add_XMP_metadata(const std::shared_ptr<Image>& master_image, const void* data, int size,
                                     heif_metadata_compression compression)
 {
-  return add_generic_metadata(master_image, data, size, "mime", "application/rdf+xml", compression);
+  return add_generic_metadata(master_image, data, size, "mime", "application/rdf+xml", nullptr, compression, nullptr);
 }
 
 
 Error HeifContext::add_generic_metadata(const std::shared_ptr<Image>& master_image, const void* data, int size,
-                                        const char* item_type, const char* content_type, heif_metadata_compression compression)
+                                        const char* item_type, const char* content_type, const char* item_uri_type, heif_metadata_compression compression,
+                                        heif_item_id* out_item_id)
 {
   // create an infe box describing what kind of data we are storing (this also creates a new ID)
 
@@ -3389,6 +3401,9 @@ Error HeifContext::add_generic_metadata(const std::shared_ptr<Image>& master_ima
   }
 
   heif_item_id metadata_id = metadata_infe_box->get_item_ID();
+  if (out_item_id) {
+    *out_item_id = metadata_id;
+  }
 
 
   // we assign this data to the image

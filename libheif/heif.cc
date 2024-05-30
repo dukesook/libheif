@@ -1957,6 +1957,13 @@ struct heif_error heif_context_write(struct heif_context* ctx,
 }
 
 
+void heif_context_add_compatible_brand(struct heif_context* ctx,
+                                       heif_brand2 compatible_brand)
+{
+  ctx->context->get_heif_file()->get_ftyp_box()->add_compatible_brand(compatible_brand);
+}
+
+
 int heif_context_get_encoder_descriptors(struct heif_context* ctx,
                                          enum heif_compression_format format,
                                          const char* name,
@@ -2017,7 +2024,7 @@ int heif_get_decoder_descriptors(enum heif_compression_format format_filter,
   std::vector<decoder_with_priority> plugins;
   std::vector<heif_compression_format> formats;
   if (format_filter == heif_compression_undefined) {
-    formats = {heif_compression_HEVC, heif_compression_AV1, heif_compression_JPEG, heif_compression_JPEG2000, heif_compression_VVC};
+    formats = {heif_compression_HEVC, heif_compression_AV1, heif_compression_JPEG, heif_compression_JPEG2000, heif_compression_HTJ2K, heif_compression_VVC};
   }
   else {
     formats.emplace_back(format_filter);
@@ -2966,7 +2973,24 @@ struct heif_error heif_context_add_generic_metadata(struct heif_context* ctx,
                                                     const char* item_type, const char* content_type)
 {
   Error error = ctx->context->add_generic_metadata(image_handle->image, data, size,
-                                                   item_type, content_type, heif_metadata_compression_off);
+                                                   item_type, content_type, nullptr, heif_metadata_compression_off, nullptr);
+  if (error != Error::Ok) {
+    return error.error_struct(ctx->context.get());
+  }
+  else {
+    return heif_error_success;
+  }
+}
+
+
+struct heif_error heif_context_add_generic_uri_metadata(struct heif_context* ctx,
+                                                        const struct heif_image_handle* image_handle,
+                                                        const void* data, int size,
+                                                        const char* item_uri_type,
+                                                        heif_item_id* out_item_id)
+{
+  Error error = ctx->context->add_generic_metadata(image_handle->image, data, size,
+                                                   "uri ", nullptr, item_uri_type, heif_metadata_compression_off, out_item_id);
   if (error != Error::Ok) {
     return error.error_struct(ctx->context.get());
   }
