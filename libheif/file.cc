@@ -988,7 +988,7 @@ void HeifFile::add_clap_property(heif_item_id id, uint32_t clap_width, uint32_t 
 
 heif_property_id HeifFile::add_property(heif_item_id id, const std::shared_ptr<Box>& property, bool essential)
 {
-  int index = m_ipco_box->append_child_box(property);
+  int index = m_ipco_box->find_or_append_child_box(property);
 
   m_ipma_box->add_property_for_item_ID(id, Box_ipma::PropertyAssociation{essential, uint16_t(index + 1)});
 
