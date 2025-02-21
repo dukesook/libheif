@@ -188,6 +188,33 @@ static emscripten::val heif_js_item_get_item_name(
 }
 
 
+static emscripten::val heif_js_item_get_item_data(
+  const struct heif_context* ctx, heif_item_id id)
+  // enum heif_metadata_compression out_compression_format)
+{
+  uint8_t* out_data = nullptr;
+  size_t out_size = 0;
+  enum heif_metadata_compression out_compression_format;
+  emscripten::val result = emscripten::val::object();
+  struct heif_error error;
+  error = heif_item_get_item_data(ctx, id, &out_compression_format, &out_data, &out_size);
+  if (error.code != heif_error_Ok) {
+    return emscripten::val(error);
+  }
+
+  // Convert the data to a JS array.
+  emscripten::val js_array = emscripten::val::global("Uint8Array").new_(out_size);
+  auto memoryView = emscripten::typed_memory_view(out_size, out_data);
+  emscripten::val js_memoryView = emscripten::val(memoryView);
+
+  js_array.call<void>("set", memoryView);
+
+  heif_release_item_data(ctx, &out_data);
+
+  return js_array;
+}
+
+
 #if 0
 static void strided_copy(void* dest, const void* src, int width, int height,
                          int stride)
@@ -403,6 +430,7 @@ EMSCRIPTEN_BINDINGS(libheif) {
     emscripten::function("heif_item_get_mime_item_content_encoding", heif_js_item_get_mime_item_content_encoding, emscripten::allow_raw_pointers());
     emscripten::function("heif_item_get_uri_item_uri_type", heif_js_item_get_uri_item_uri_type, emscripten::allow_raw_pointers());
     emscripten::function("heif_item_get_item_name", heif_js_item_get_item_name, emscripten::allow_raw_pointers());
+    emscripten::function("heif_item_get_item_data", heif_js_item_get_item_data, emscripten::allow_raw_pointers());
     EXPORT_HEIF_FUNCTION(heif_context_get_number_of_items);
     EXPORT_HEIF_FUNCTION(heif_item_is_item_hidden);
 
@@ -563,6 +591,14 @@ EMSCRIPTEN_BINDINGS(libheif) {
     .value("heif_filetype_yes_unsupported", heif_filetype_yes_unsupported)
     .value("heif_filetype_maybe", heif_filetype_maybe);
 
+    emscripten::enum_<heif_metadata_compression>("heif_metadata_compression")
+    .value("heif_metadata_compression_off", heif_metadata_compression_off)
+    .value("heif_metadata_compression_auto", heif_metadata_compression_auto)
+    .value("heif_metadata_compression_unknown", heif_metadata_compression_unknown)
+    .value("heif_metadata_compression_deflate", heif_metadata_compression_deflate)
+    .value("heif_metadata_compression_zlib", heif_metadata_compression_zlib)
+    .value("heif_metadata_compression_brotli", heif_metadata_compression_brotli);
+
     emscripten::class_<heif_context>("heif_context");
     emscripten::class_<heif_image_handle>("heif_image_handle");
     emscripten::class_<heif_image>("heif_image");
@@ -574,6 +610,8 @@ EMSCRIPTEN_BINDINGS(libheif) {
     }), emscripten::optional_override([](struct heif_error& err, const std::string& value) {
         err.message = value.c_str();
     }));
+
+
 }
 
 #endif  // LIBHEIF_BOX_EMSCRIPTEN_H
